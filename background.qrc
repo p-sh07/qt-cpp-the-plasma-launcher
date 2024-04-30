@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>plasma.png</file>
+        <file>plasma-resized.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>plasma-resized.png</file>
+        <file>Doom-Logo.png</file>
+    </qresource>
+</RCC>
