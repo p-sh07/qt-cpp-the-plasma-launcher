@@ -23,8 +23,6 @@ public:
 private slots:
     void on_iwad_select_combo_currentIndexChanged(int index);
     void on_modset_select_combo_currentIndexChanged(int index);
-    void on_mods_selection_list_itemDoubleClicked(QListWidgetItem *item);
-    void on_iwad_select_combo_activated(int index);
 
     void on_launch_game_btn_clicked();
 
@@ -32,6 +30,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    gzdml_win_qt mod_manager_;
+    gzdml_mac_qt mod_manager_;
 };
 #endif // MAINWINDOW_H

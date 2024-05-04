@@ -8,7 +8,7 @@
 
 namespace dgc {
 
-ModSet::ModSet(std::string label, fs::path iwad = DFLT_IWADS_PATH/"DOOM.WAD", std::unordered_set<std::string> mod_filenames = {})
+ModSet::ModSet(std::string label, fs::path iwad = {}, std::unordered_set<std::string> mod_filenames = {})
     : label(label), iwad(iwad), mod_filenames(mod_filenames) {}
 
 //open default file if empty path
@@ -31,7 +31,7 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
     // }
 
     //set mod configs for testing
-    games.push_back({"Classic DOOM"});
+    games.push_back({"None"});
 
     //0
     games.push_back(ModSet(

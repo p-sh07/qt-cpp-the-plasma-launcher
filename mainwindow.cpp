@@ -33,7 +33,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_iwad_select_combo_currentIndexChanged(int index)
 {
-
+    mod_manager_.SetIwad(index);
 }
 
 void MainWindow::on_modset_select_combo_currentIndexChanged(int index)
@@ -41,21 +41,10 @@ void MainWindow::on_modset_select_combo_currentIndexChanged(int index)
     mod_manager_.SetModSet(index);
 }
 
-
-void MainWindow::on_mods_selection_list_itemDoubleClicked(QListWidgetItem *item)
-{
-
-}
-
-void MainWindow::on_iwad_select_combo_activated(int index)
-{
-
-}
-
-
 void MainWindow::on_launch_game_btn_clicked()
 {
-    mod_manager_.LaunchGame();
+    cerr << "-> passing launch command: " << ui->modset_select_combo->currentIndex();
+    mod_manager_.LaunchGame(ui->modset_select_combo->currentIndex());
 }
 
 

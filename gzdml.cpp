@@ -20,42 +20,46 @@ void GzdoomLauncher::AddModToExistingSet(size_t mset_id, const fs::path& wad_or_
 }
 
 //There is always a default launch config present
-void GzdoomLauncher::LaunchGame() {
+void GzdoomLauncher::LaunchGame(size_t index) {
+    MakeLabels(mod_dir_);
+    MakeLabels(iwad_dir_);
+
 
     try {
-        PerformLaunch(games_.at(chosen_mod_set_));
+        PerformLaunch(index);
     }
     catch (std::exception& ex) {
         cout << "Error during launch: " << ex.what() << endl;
     }
 }
 
+void GzdoomLauncher::SetModSet(size_t index) {
+    chosen_mod_set_ = index;
+}
+void GzdoomLauncher::SetIwad(size_t index) {
+    chosen_iwad_ = index;
+}
+
 //METHODS
 //looks for the gzdoom exe and sets the path variables
-void GzdoomLauncher::InitGZDoomPaths() {
+void GzdoomLauncher::InitGZDoomPaths() const {
     
 }
 
 //creates all the neccessary directories
-void GzdoomLauncher::SetupFolders() {
+void GzdoomLauncher::SetupFolders() const {
     
 }
 
-std::string GzdoomLauncher::MakeLaunchCommand(const dgc::ModSet& mset) const {
-    std::string launch_command = "-config ";
-    launch_command.append(mset.config.string());
 
-    if (!mset.iwad.empty()) {
-        launch_command.append(" -iwad ");
-        launch_command.append(mset.iwad.string());
+std::string GzdoomLauncher::MakeDefaultCmd() {
+    std::string cmd = "open -g -a "+ (fs::current_path() / gzdoompath_.string() / "gzdoom.app").string() + " -iwad " + iwad_paths_[chosen_iwad_].string()
+                      + " -file";
+    for(const auto& mod_index : chosen_mods_) {
+        cmd.append(" ").append(mod_paths_[mod_index]);
     }
 
-    launch_command.append(" -file");
-
-    for (const auto& mod : mset.mod_filenames) {
-        launch_command.append(" " + mset.mod_dir.string() + "\\" + mod);
-    }
-    return launch_command;
+    return cmd;
 }
 
 
@@ -64,14 +68,19 @@ std::vector<std::string> GzdoomLauncher::MakeLabels(const fs::path& dir) {
     for(const auto& filepath : fs::directory_iterator{dir}) {
         if(fs::is_regular_file(filepath.status())) {
             result.push_back(std::string(filepath.path().filename()));
+            if(dir == mod_dir_) {
+                mod_paths_.push_back(filepath.path());
+            } else if (dir == iwad_dir_) {
+                iwad_paths_.push_back(filepath.path());
+            }
         }
     }
     return result;
 }
 
 
-std::vector<std::string_view> GzdoomLauncher::MakeModsetLabels() {
-    std::vector<std::string_view> labels;
+std::vector<std::string> GzdoomLauncher::MakeModsetLabels() const {
+    std::vector<std::string> labels;
 
     for(const auto& mset : games_) {
         labels.push_back(mset.label);
@@ -89,11 +98,37 @@ std::vector<std::string_view> GzdoomLauncher::MakeModsetLabels() {
                 }
         });*/ //- weird
 
-void GzdoomLauncher::CreateDirIfDoesntExist(const fs::path& dir) {
+void GzdoomLauncher::CreateDirIfDoesntExist(const fs::path& dir) const  {
     if(!fs::exists(dir)) {
         fs::create_directory(dir);
     }
 }
+
+
+QStringList GzdoomLauncher::GetModsetLabels()  {
+    QStringList labels;
+    for(const auto& lbl : GzdoomLauncher::MakeModsetLabels()) {
+        labels.append(QString::fromStdString(std::string(lbl)));
+    }
+    return labels;
+}
+
+QStringList GzdoomLauncher::GetIwadLabels() {
+    QStringList labels;
+    for(const auto& lbl : GzdoomLauncher::MakeLabels(iwad_dir_)) {
+        labels.append(QString::fromStdString(lbl));
+    }
+    return labels;
+}
+
+QStringList GzdoomLauncher::GetModLabels() {
+    QStringList labels;
+    for(const auto& lbl : GzdoomLauncher::MakeLabels(mod_dir_)) {
+        labels.append(QString::fromStdString(lbl));
+    }
+    return labels;
+}
+
 
 
 //=================== Windows Implementation ===================//
@@ -102,11 +137,33 @@ gzdml_win_qt::gzdml_win_qt()
 }
 
 //makes a launch command string from a DooM game config struct
-std::string gzdml_win_qt::MakeLaunchCommand(const dgc::ModSet& mset) const {
-    return GzdoomLauncher::MakeLaunchCommand(mset);
+std::string gzdml_win_qt::MakeLaunchCommand(size_t index) {
+    std::string launch_command;// = "-config ";
+
+    if(index == 0) {
+        return MakeDefaultCmd();
+    }
+
+    //launch_command.append(mset.config.string());
+    auto& mset = GetModset(index);
+    if (!mset.iwad.empty()) {
+        launch_command.append(" -iwad ");
+        launch_command.append( (mset.iwad_dir / mset.iwad).string()) ;
+    }
+
+    launch_command.append(" -file");
+
+    for (const auto& mod : mset.mod_filenames) {
+        launch_command.append(" " + mset.mod_dir.string() + "/" + mod);
+    }
+    return launch_command;
 }
 
-void gzdml_win_qt::PerformLaunch(const dgc::ModSet& ms) const {
+void gzdml_win_qt::PerformLaunch(size_t index) {
+
+}
+
+/*
     // std::string lcmd = MakeLaunchCommand(selected_mod_id_);
     // ShellExecuteW(NULL, NULL, gzdoomexe.c_str(), std::wstring(lcmd.begin(), lcmd.end()).c_str(), gzdoompath.c_str(), SW_SHOWDEFAULT);
 
@@ -137,30 +194,6 @@ void gzdml_win_qt::PerformLaunch(const dgc::ModSet& ms) const {
     // CloseHandle(pi.hThread);
 }
 
-
-QStringList gzdml_win_qt::GetModsetLabels() {
-    QStringList labels;
-    for(const auto& lbl : GzdoomLauncher::MakeModsetLabels()) {
-        labels.append(QString::fromStdString(std::string(lbl)));
-    }
-    return labels;
-}
-
-QStringList gzdml_win_qt::GetIwadLabels() {
-    QStringList labels;
-    for(const auto& lbl : GzdoomLauncher::MakeLabels(iwad_dir_)) {
-        labels.append(QString::fromStdString(lbl));
-    }
-    return labels;
-}
-
-QStringList gzdml_win_qt::GetModLabels() {
-    QStringList labels;
-    for(const auto& lbl : GzdoomLauncher::MakeLabels(mod_dir_)) {
-        labels.append(QString::fromStdString(lbl));
-    }
-    return labels;
-}
 
 
 //Tested - working - windows
@@ -197,3 +230,67 @@ QStringList gzdml_win_qt::GetModLabels() {
     //ALT, working:
     //ShellExecute(NULL, L"runas", gzdoomexe.c_str(), NULL, L"gzdoom", SW_SHOWDEFAULT);
     //ShellExecute(NULL, NULL, gzdoomexe.c_str(), NULL, L"gzdoom", SW_SHOWDEFAULT);
+
+*/
+
+//=================== Windows Implementation ===================//
+gzdml_mac_qt::gzdml_mac_qt()
+    : GzdoomLauncher() {
+}
+
+//makes a launch command string from a DooM game config struct
+std::string gzdml_mac_qt::MakeLaunchCommand(size_t index) {
+    std::string launch_command;
+
+    // if(index == 0) {
+    //     return MakeDefaultCmd();
+    // }
+
+    auto& mset = GetModset(index);
+
+    if(!mset.config.empty()) {
+        launch_command.append(" -config ").append(mset.config.string());
+    }
+
+    if (mset.iwad.empty()) {
+         launch_command.append(" -iwad ").append(iwad_paths_[chosen_iwad_].string());
+    } else {
+       launch_command.append(" -iwad ").append(mset.iwad_dir / mset.iwad);
+    }
+
+    launch_command.append(" -file");
+
+    for (const auto& mod : mset.mod_filenames) {
+        launch_command.append(" " + mset.mod_dir.string() + "/" + mod);
+    }
+    return launch_command;
+}
+
+void gzdml_mac_qt::PerformLaunch(size_t index) {
+
+    const dgc::ModSet& ms = GetModset(index);
+
+    const std::string cmd = "open -g -a "+ (fs::current_path() / gzdoompath_.string() / "gzdoom.app").string() + MakeLaunchCommand(index);
+    cerr << "/n ->Cmd send: " << cmd << endl;
+    std::system(cmd.data());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

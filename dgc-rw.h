@@ -34,7 +34,7 @@ struct ModSet
     fs::path gzdoom_dir = DFLT_GZDOOM;
     fs::path config = DFLT_CONFIG;
     fs::path iwad_dir = "iwads";
-    fs::path iwad = "iwads/DOOM.WAD";
+    fs::path iwad;
     fs::path mod_dir = "mods";
     std::unordered_set<std::string> mod_filenames;
     

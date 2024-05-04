@@ -3,6 +3,11 @@
 //#include <windows.h>
 //#include <Atlconv.h>
 
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -29,7 +34,7 @@ class GzdoomLauncher
 {
 public:
     GzdoomLauncher();
-    ~GzdoomLauncher() = default;
+    virtual ~GzdoomLauncher() = default;
 
     GzdoomLauncher(const fs::path& gzdoom_dir);
     
@@ -37,7 +42,7 @@ public:
     void AddModToExistingSet(size_t mset_id, const fs::path& wad_or_pk3);
 
     //There is always a default launch config present
-    void LaunchGame();
+    void LaunchGame(size_t index);
 
     void SetModSet(size_t index);
     void SetIwad(size_t index);
@@ -46,6 +51,20 @@ public:
     void SetEnabledMods(const std::unordered_set<std::string_view>& enabled_mods);
 
     void SaveChanges();
+
+    QStringList GetModsetLabels() ;
+
+    QStringList GetIwadLabels() ;
+
+    QStringList GetModLabels() ;
+
+    inline std::vector<fs::path>& GetModPaths() {
+        return mod_paths_;
+    }
+
+    dgc::ModSet& GetModset(size_t index) {
+        return games_[index];
+    }
 
 protected:
     //PARAMS
@@ -59,40 +78,56 @@ protected:
     fs::path iwad_dir_       = dgc::DFLT_IWADS_PATH;
     fs::path mod_dir_        = dgc::DFLT_MODWADS_PATH;
 
+    size_t chosen_iwad_ = 0;
+    size_t chosen_mod_set_ = 0;
+
+    std::vector<fs::path> iwad_paths_;
+    std::vector<fs::path> mod_paths_;
+
     //METHODS
-    std::vector<std::string_view> MakeModsetLabels();
+    std::vector<std::string> MakeModsetLabels() const;
     std::vector<std::string> MakeLabels(const fs::path& dir);
+    void CreateDirIfDoesntExist(const fs::path& dir) const;
 
     //makes a launch command string from a ModSet - define for each OS separately in case of specifics ?
-    virtual std::string MakeLaunchCommand(const dgc::ModSet& mset) const;
-    void CreateDirIfDoesntExist(const fs::path& dir);
+    virtual std::string MakeLaunchCommand(size_t index) = 0;
+    virtual std::string MakeDefaultCmd();
+
 private:
-    size_t chosen_mod_set_ = 0;
-    size_t chosen_iwad_ = 0;
+    std::vector<size_t> chosen_mods_;
     //looks for the gzdoom exe and sets the path variables
-    void InitGZDoomPaths();
+    void InitGZDoomPaths() const;
+
+
     // //creates all the neccessary directories, if not already present
-    void SetupFolders();
+    void SetupFolders() const;
     dgc::DgcParser parser_;
-    //games_[0] is default & temp?
+    //games_[0] is default & temp
     std::vector<dgc::ModSet> games_{1};
     
-    virtual void PerformLaunch(const dgc::ModSet& mset) const = 0;
+    virtual void PerformLaunch(size_t index) = 0;
 };
 
 class gzdml_win_qt final : public GzdoomLauncher {
 public:
     gzdml_win_qt();
     ~gzdml_win_qt() = default;
-
-    QStringList GetModsetLabels();
-    QStringList GetIwadLabels();
-    QStringList GetModLabels();
     
 private:
-    std::string MakeLaunchCommand(const dgc::ModSet& ms) const override;
-    void PerformLaunch(const dgc::ModSet& ms) const override;
+    std::string MakeLaunchCommand(size_t index) override;
+    void PerformLaunch(size_t index) override;
 };
+
+class gzdml_mac_qt final : public GzdoomLauncher {
+public:
+    gzdml_mac_qt();
+    ~gzdml_mac_qt() = default;
+
+private:
+    std::string MakeLaunchCommand(size_t index) override;
+    void PerformLaunch(size_t index) override;
+};
+
 
 //TODO: IFdef windows, etc...
 
