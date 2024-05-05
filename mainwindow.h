@@ -24,12 +24,19 @@ private slots:
     void on_iwad_select_combo_currentIndexChanged(int index);
     void on_modset_select_combo_currentIndexChanged(int index);
 
-    void on_launch_game_btn_clicked();
+    void on_mods_selection_list_itemChanged(QListWidgetItem *item);
 
-    void on_mods_selection_list_itemSelectionChanged();
+    void ChooseIwadFolder();
+
+    void on_actionChoose_iwads_folder_triggered();
+
+    void on_apply_btn_pressed();
+    void on_launch_game_btn_clicked();
 
 private:
     Ui::MainWindow *ui;
     gzdml_mac_qt mod_manager_;
+
+    void UpdCmdDisplay();
 };
 #endif // MAINWINDOW_H

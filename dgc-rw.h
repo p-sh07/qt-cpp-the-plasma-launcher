@@ -29,14 +29,14 @@ const fs::path DFLT_MODWADS_PATH = "mods";
 struct ModSet
 {
     ModSet() = default;
-    ModSet(std::string label, fs::path iwad, std::unordered_set<std::string> mod_filenames);
+    ModSet(std::string label, fs::path iwad, std::vector<fs::path> mod_filenames);
     std::string label = "None";
     fs::path gzdoom_dir = DFLT_GZDOOM;
     fs::path config = DFLT_CONFIG;
-    fs::path iwad_dir = "iwads";
-    fs::path iwad;
-    fs::path mod_dir = "mods";
-    std::unordered_set<std::string> mod_filenames;
+    fs::path iwad_dir = DFLT_IWADS_PATH;
+    fs::path iwad= "DOOM.WAD";
+    fs::path mod_dir = DFLT_MODWADS_PATH;
+    std::vector<fs::path> mod_paths;
     
     //zips dir? multiple dirs?
 };

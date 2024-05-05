@@ -8,8 +8,8 @@
 
 namespace dgc {
 
-ModSet::ModSet(std::string label, fs::path iwad = {}, std::unordered_set<std::string> mod_filenames = {})
-    : label(label), iwad(iwad), mod_filenames(mod_filenames) {}
+ModSet::ModSet(std::string label, fs::path iwad = {}, std::vector<fs::path> mod_paths = {})
+    : label(label), iwad(iwad), mod_paths(mod_paths) {}
 
 //open default file if empty path
 DgcParser::DgcParser(const fs::path settings_file)
