@@ -8,8 +8,11 @@
 
 namespace dgc {
 
-ModSet::ModSet(std::string label, fs::path iwad = {}, std::vector<fs::path> mod_paths = {})
-    : label(label), iwad(iwad), mod_paths(mod_paths) {}
+ModSet::ModSet(std::string label, std::string iwad, std::vector<std::string> mod_filenames)
+    : label(std::move(label))
+    , iwad(std::move(iwad))
+    , selected_mods(mod_filenames) {
+}
 
 //open default file if empty path
 DgcParser::DgcParser(const fs::path settings_file)
@@ -31,7 +34,7 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
     // }
 
     //set mod configs for testing
-    games.push_back({"None"});
+    games.push_back({"Default"});
 
     //0
     games.push_back(ModSet(
@@ -40,24 +43,23 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
         //iWad
         "DOOM.WAD"s,
         {//Mods
-            "brutalv22test3.pk3",
-            "SIGIL_v1_21.wad",
-            "SIGIL_SHREDS.wad",
-            "SIGIL_II_V1_0.WAD",
-            "sigil2_ost_thorr.WAD",
-            "D64TEX.PK3",
+            "BrutalDoom.pk3",
+            "Sigil_I.wad",
+            "Sigil_I_ost_bckh.wad",
+            "Sigil_II.wad",
+            "Sigil2_ost_thorr.WAD",
             "DoomMetalVol5.wad"
         }
         ));
     //1
     games.push_back(ModSet(
         //Label
-        "Brutal DooM2"s,
+        "Brutal DooM 2"s,
         //iWad
         "DOOM2.WAD"s,
         {//Mods
-            "brutalv22test3.pk3",
-            "D64TEX.PK3",
+            "BrutalDoom.pk3",
+            "D64Textures.pk3",
             "DoomMetalVol5.wad"
         }
         ));
@@ -68,9 +70,9 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
         //iWad
         "DOOM2.WAD"s,
         {//Mods
-            "btsx_e1a.wad",
-            "btsx_e1b.wad",
-            "brutalv22test3.pk3"
+            "BTSX_1a.wad",
+            "BTSX_1b.wad",
+            "BrutalDoom.pk3"
         }
         ));
     //3
@@ -80,9 +82,9 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
         //iWad
         "DOOM2.WAD"s,
         {//Mods
-            "btsx_e2a.wad",
-            "btsx_e2b.wad",
-            "brutalv22test3.pk3"
+            "BTSX_2a.wad",
+            "BTSX_2b.wad",
+            "BrutalDoom.pk3"
         }
         ));
     //4
@@ -92,11 +94,11 @@ std::vector<ModSet> DgcParser::ParseFromFile() {
         //iWad
         "DOOM.WAD"s,
         {//Mods
-            "d2-in-d1-v3.pk3",
-            "Lost_in_DarknessV2.0.23.pk3",
+            "LiD_for_dm1.pk3",
+            "LostinDarknes.pk3",
             "LiveReverb.pk3",
             "Rain_and_Snow.pk3",
-            "D64TEX.PK3"
+            "D64Textures.pk3"
         }
         ));
     return games;
