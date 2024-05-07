@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QListWidgetItem>
@@ -12,6 +11,8 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+//================================================================//
+//================ Main Window ================//
 class MainWindow : public QMainWindow {
 
     Q_OBJECT
@@ -19,24 +20,41 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+//============== Controls ==============//
 private slots:
+//---- Iwad Select ----
     void on_iwad_select_combo_currentIndexChanged(int index);
-    void on_modset_select_combo_currentIndexChanged(int index);
-
-    void on_mods_selection_list_itemChanged(QListWidgetItem *item);
-
-    void ChooseIwadFolder();
-
     void on_actionChoose_iwads_folder_triggered();
 
-    void on_apply_btn_pressed();
+//---- Mod/ModSet Select ----
+    void on_mods_selection_list_itemChanged(QListWidgetItem *item);
+    void on_modset_select_combo_currentIndexChanged(int index);
+
+//---- Buttonst ----
     void on_launch_game_btn_clicked();
+    void on_apply_btn_clicked();
+
+    void on_save_new_btn_clicked();
+
+    void on_set_folders_btn_clicked();
+
+    void on_reset_btn_clicked();
+
+    void on_updmodlist_btn_clicked();
 
 private:
+//---- Params ----
     Ui::MainWindow *ui;
-    gzdml_mac_qt mod_manager_;
+    MacGzdml mod_manager_;
 
+//---- Helper Functions ----
+    void InitModList();
+    void UpdModList();
+    void InitModsetCombo();
+    void InitIwadCombo();
+    void UpdIwadCombo();
     void UpdCmdDisplay();
+    void ChooseIwadFolder();
 };
-#endif // MAINWINDOW_H
+//+++++++++++++++++++ Eof MainWindow Class +++++++++++++++++++//
+//==============================================================//
