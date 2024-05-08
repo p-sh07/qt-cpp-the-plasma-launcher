@@ -36,13 +36,13 @@ GzdoomLauncher::GzdoomLauncher()
     : parser_(dgc::DgcParser())
     , games_(parser_.ParseFromFile()) {
 
-    //init cfg paths
-    InitLaunchConfig();
-
     //Create main directories if they dont exist;
     CreateDirIfDoesntExist(dgc::DFLT_GZDOOM);
     CreateDirIfDoesntExist(dgc::DFLT_IWADS_PATH);
     CreateDirIfDoesntExist(dgc::DFLT_MODWADS_PATH);
+
+    //init cfg paths
+    InitLaunchConfig();
 }
 
 //There is always a default launch config present
@@ -217,7 +217,7 @@ std::string GzdoomLauncher::GetDisplayCmd() {
         cmd.append("CONFIG: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
     //IWAD:
-    cmd.append(  "\nIWAD:  " + lcfg_.iwad_filenames[lcfg_.chosen_iwad]);
+    cmd.append(  "\nIWAD:  " + (lcfg_.iwad_filenames.empty() ? "Folder Empty" : lcfg_.iwad_filenames[lcfg_.chosen_iwad]));
     //MODS:
     if (!lcfg_.chosen_mods.empty()) {
         cmd.append(  "\nMODS:  ");
@@ -253,7 +253,7 @@ std::vector<std::string> GzdoomLauncher::GetSortedFilenames(const fs::path dir) 
 
     for(const auto& filepath : fs::directory_iterator{dir}) {
         if(fs::is_regular_file(filepath.status())) {
-            filenames.push_back(filepath.path().filename());
+            filenames.push_back(filepath.path().filename().string());
         }
     }
     std::sort(filenames.begin(), filenames.end(), strIsLess);

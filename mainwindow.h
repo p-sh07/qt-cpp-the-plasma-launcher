@@ -45,7 +45,7 @@ private slots:
 private:
 //---- Params ----
     Ui::MainWindow *ui;
-    MacGzdml mod_manager_;
+    WinGzdml mod_manager_;
 
 //---- Helper Functions ----
     void InitModList();
