@@ -40,7 +40,7 @@ private:
     log::FileLogger __log{log::LOG_FILE_PATH};
 
     Ui::MainWindow *ui;
-    MacGzdml mod_manager_;
+    WinGzdml mod_manager_;
 
 //---- Helper Functions ----
     void InitModList();

@@ -1,3 +1,4 @@
+
 #include "gzdml.h"
 
 #include <cctype>
@@ -174,6 +175,7 @@ void GzdoomLauncher::SetIwadDir(std::string dir) {
 void GzdoomLauncher::SetMod(size_t mod_folder_index, bool enable) {
     //Check if the mod is currently enabled
     auto it = std::ranges::find(lcfg_.chosen_mods, mod_folder_index);
+
     //Disable or enable the mod
     if(enable && it == lcfg_.chosen_mods.end()) {
         lcfg_.chosen_mods.push_back(mod_folder_index);
