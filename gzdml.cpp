@@ -258,13 +258,13 @@ std::string GzdoomLauncher::GetDisplayCmd() {
     std::string cmd;
     //Add config, if specified:
     if(!lcfg_.gzdoom_ini_path.empty()) {
-        cmd.append("CONFIG: ").append(lcfg_.gzdoom_ini_path.filename().string());
+        cmd.append("GZD.INI: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
     //IWAD:
-    cmd.append(  "\nIWAD:  " + GetIwad());
+    cmd.append(  "\nIWAD: " + GetIwad());
     //MODS:
     if (!lcfg_.chosen_mods.empty()) {
-        cmd.append(  "\nMODS:  ");
+        cmd.append(  "\nMODS: ");
         for(const size_t mod_num : lcfg_.chosen_mods) {
             cmd.append(" [" + lcfg_.mod_filenames[mod_num] + "]");
         }

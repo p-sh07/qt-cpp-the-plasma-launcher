@@ -33,14 +33,7 @@ private slots:
 //---- Buttonst ----
     void on_launch_game_btn_clicked();
     void on_apply_btn_clicked();
-
-    void on_save_new_btn_clicked();
-
     void on_set_folders_btn_clicked();
-
-    void on_reset_btn_clicked();
-
-    //void on_updmodlist_btn_clicked();
 
 private:
 //---- Params ----
@@ -57,6 +50,7 @@ private:
     void UpdIwadCombo();
     void UpdCmdDisplay();
     void ChooseIwadFolder();
+    fs::path ChooseFolder(const QString& caption);
 };
 //+++++++++++++++++++ Eof MainWindow Class +++++++++++++++++++//
 //==============================================================//

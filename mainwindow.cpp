@@ -87,25 +87,11 @@ void MainWindow::on_apply_btn_clicked()
 }
 
 
-
-void MainWindow::on_save_new_btn_clicked()
-{
-    cerr<< "->saving new folders\n";
-}
-
-
 void MainWindow::on_set_folders_btn_clicked()
 {
-cerr<< "->setting folders\n";
+    cerr<< "->setting folders\n";
+    mod_manager_.InitLaunchConfig(ChooseFolder("Choose MODS Folder"), ChooseFolder("Choose GZDOOM Folder"), ChooseFolder("Choose IWAD Folder"));
 }
-
-
-void MainWindow::on_reset_btn_clicked()
-{
-    cerr<< "->resetting modset\n";
-    mod_manager_.SetModSet(static_cast<size_t>(ui->modset_select_combo->currentIndex()));
-}
-
 
 // void MainWindow::on_updmodlist_btn_clicked()
 // {
@@ -165,9 +151,14 @@ void MainWindow::UpdCmdDisplay() {
         ui->text_cmd_display->setText(QString::fromStdString(mod_manager_.GetDisplayCmd()));
     }
 }
+
+fs::path MainWindow::ChooseFolder(const QString& caption) {
+    return QFileDialog::getExistingDirectory(this, caption).toStdString();
+}
+
 void MainWindow::ChooseIwadFolder() {
     cerr << "choose folder called: ";
-    std::string chosen_dir = QFileDialog::getExistingDirectory().toStdString();
+    std::string chosen_dir = QFileDialog::getExistingDirectory(this, "Choose IWAD").toStdString();
     cerr << chosen_dir  << endl;
     mod_manager_.SetIwadDir(std::move(chosen_dir));
 }
