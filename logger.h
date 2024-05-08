@@ -22,8 +22,10 @@
 #define LOG_DURATION(message) LogDuration UNIQUE_ID(__LINE__){message};
 
 #define LOG_MSG(message) LogMsg(__FILE__, __LINE__, message);
-namespace log {
-const std::filesystem::path LOG_FILE_PATH = "/Users/ps/Desktop/gzdml_log.txt";
+
+namespace _log {
+
+const std::filesystem::path LOG_FILE_NAME = "gzdml_log.txt";
 
 class Duration {
 public:
@@ -57,7 +59,7 @@ public:
     FileLogger(const std::filesystem::path& file);
     void LogMsg(std::string msg) const;
 private:
-    std::ofstream of_;
+    const std::filesystem::path log_file_;
 };
 
 const FileLogger& operator<<(const FileLogger& fl, const std::string msg);

@@ -11,6 +11,7 @@ CONFIG += c++20
 SOURCES += \
     dgc-rw.cpp \
     gzdml.cpp \
+    json.cpp \
     logger.cpp \
     main.cpp \
     mainwindow.cpp
@@ -32,6 +33,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     bkgnd.qrc \
     icn.qrc
+
+DEFINES += \
+WIN_BUILD
+#MAC_BUILD
 
 #comment
 ICON = applet.icns

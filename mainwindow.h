@@ -37,10 +37,15 @@ private slots:
 
 private:
 //---- Params ----
-    log::FileLogger __log{log::LOG_FILE_PATH};
+    _log::FileLogger __log{_log::LOG_FILE_NAME};
 
     Ui::MainWindow *ui;
+
+#ifdef WIN_BUILD
     WinGzdml mod_manager_;
+#elif defined(MAC_BUILD)
+    MacGzdml mod_manager_;
+#endif
 
 //---- Helper Functions ----
     void InitModList();

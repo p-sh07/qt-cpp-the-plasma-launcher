@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <windows.h>
+#include <windows.h>
 //#include <Atlconv.h>
 
 
@@ -35,35 +35,12 @@ using std::ifstream;
 
 namespace fs = std::filesystem;
 
-namespace dgc {
-
-struct LaunchSettings {
-    const fs::path gzdoom_exe = "gzdoom.exe";
-    const fs::path gzdoom_app = "gzdoom.app";
-
-    fs::path gzdoom_folder;
-    fs::path gzdoom_ini_path;
-    fs::path mod_config_path;
-
-    fs::path iwad_folder;
-    fs::path mod_folder;
-
-    size_t chosen_iwad = 0;
-    size_t chosen_mod_set = 0;
-    std::vector<size_t> chosen_mods;
-
-    std::vector<std::string> iwad_filenames;
-    std::vector<std::string> mod_filenames;
-};
-
-}
-
 //================================================================//
 //================ GzdoomLauncher - Interface/Abstract Class =====//
 class GzdoomLauncher
 {
 public:
-    GzdoomLauncher(const log::FileLogger& logger);
+    GzdoomLauncher(const _log::FileLogger& logger);
     virtual ~GzdoomLauncher() = default;
 
 //------------------ Public Methods ------------------//
@@ -105,7 +82,7 @@ public:
     inline const dgc::LaunchSettings& GetLaunchConfig() { return lcfg_; }
 
 protected:
-    const log::FileLogger& __log;
+    const _log::FileLogger& __log;
 //---- Get config ref for modifying - only for child classes ------
     dgc::LaunchSettings& ModLcfg() { return lcfg_; }
 private:

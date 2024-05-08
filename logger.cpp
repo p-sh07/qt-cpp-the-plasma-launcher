@@ -3,12 +3,12 @@
 #include <fstream>
 #include <time.h>
 
-log::FileLogger::FileLogger(const std::filesystem::path& file)
-    : of_(file, std::ios_base::app) {
+_log::FileLogger::FileLogger(const std::filesystem::path& file)
+    : log_file_(file) {
 }
 
-void log::FileLogger::LogMsg(std::string msg) const {
-    std::ofstream out(LOG_FILE_PATH, std::ios_base::app);
+void _log::FileLogger::LogMsg(std::string msg) const {
+    std::ofstream out{log_file_, std::ios_base::app};
 
     std::time_t now = std::time(NULL);
     std::tm* ptm = std::localtime(&now);
@@ -22,7 +22,7 @@ void log::FileLogger::LogMsg(std::string msg) const {
     out.close();
 }
 
-const log::FileLogger& log::operator<<(const log::FileLogger& fl, const std::string msg) {
+const _log::FileLogger& _log::operator<<(const _log::FileLogger& fl, const std::string msg) {
     fl.LogMsg(msg);
     return fl;
 }
