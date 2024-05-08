@@ -30,7 +30,7 @@ const fs::path DFLT_MODWADS_PATH = "mods";
 struct ModSet
 {
     ModSet() = default;
-    ModSet(std::string label, std::string iwad = "", std::vector<std::string> mod_filenames = {});
+    ModSet(std::string label, std::string iwad = "DOOM.WAD", std::vector<std::string> mod_filenames = {});
 
     //Required:
     std::string label = "Default";

@@ -9,18 +9,33 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    ,  mod_manager_(__log)
 {
-    ui->setupUi(this);
+    __log << "MainWindow constructor Started";
+    __log << "App working dir: "+fs::current_path().string();
+    __log << "App current path: "+QDir::currentPath().toStdString();
 
-    InitModsetCombo();
-    InitIwadCombo();
-    InitModList();
-    UpdCmdDisplay();
+    //TODO: Ask for folders during first launch!
 
+    try {
+        ui->setupUi(this);
+
+        InitModsetCombo();
+        InitIwadCombo();
+        InitModList();
+        UpdCmdDisplay();
+    }
+    catch(std::exception& ex) {
+        __log << "ERROR: " + std::string(ex.what());
+    }
+
+    __log << "MainWindow construction Finished\n";
 }
 
 MainWindow::~MainWindow()
 {
+    __log << "MainWindow DESTRUCTOR called\n";
+
     delete ui;
 }
 //TODO: save and reset buttons !
@@ -75,26 +90,28 @@ void MainWindow::on_apply_btn_clicked()
 
 void MainWindow::on_save_new_btn_clicked()
 {
-
+    cerr<< "->saving new folders\n";
 }
 
 
 void MainWindow::on_set_folders_btn_clicked()
 {
-
+cerr<< "->setting folders\n";
 }
 
 
 void MainWindow::on_reset_btn_clicked()
 {
+    cerr<< "->resetting modset\n";
     mod_manager_.SetModSet(static_cast<size_t>(ui->modset_select_combo->currentIndex()));
 }
 
 
-void MainWindow::on_updmodlist_btn_clicked()
-{
-    mod_manager_.InitLaunchConfig();
-}
+// void MainWindow::on_updmodlist_btn_clicked()
+// {
+//     cerr<< "->refreshing modset list..\n";
+//     mod_manager_.InitLaunchConfig();
+// }
 
 //============== Private Helper Methods ==============//
 void MainWindow::InitModList() {

@@ -32,17 +32,24 @@ bool pathFnameIsLess(const fs::path& lhs, const fs::path& rhs)
 
 //================================================================//
 //================ GzdoomLauncher - Interface ================//
-GzdoomLauncher::GzdoomLauncher()
-    : parser_(dgc::DgcParser())
+GzdoomLauncher::GzdoomLauncher(const log::FileLogger& logger)
+    : __log(logger)
+    , parser_(dgc::DgcParser())
     , games_(parser_.ParseFromFile()) {
+
+
+    __log << "\n\n***** New Launch *****\n";
+    __log << "GZDML: construction Started";
+
+    try {
+    __log << "GZDML: Starting initLaunchscfg()";
 
     //init cfg paths
     InitLaunchConfig();
-
-    //Create main directories if they dont exist;
-    CreateDirIfDoesntExist(dgc::DFLT_GZDOOM);
-    CreateDirIfDoesntExist(dgc::DFLT_IWADS_PATH);
-    CreateDirIfDoesntExist(dgc::DFLT_MODWADS_PATH);
+    } catch(std::exception& ex) {
+    __log << "*GZDML ERROR*: " + std::string(ex.what());
+    }
+    __log << "GZDML: construction Finished\n";
 }
 
 //There is always a default launch config present
@@ -57,19 +64,36 @@ void GzdoomLauncher::LaunchGame() {
 }
 
 void GzdoomLauncher::InitLaunchConfig (const fs::path& mod_folder, const fs::path& gzdoom_folder, const fs::path& iwad_folder) {
-    const fs::path cp = fs::current_path();
+
+    //TODO: Adding iwad dir to gzdoom_config.ini!
+
+    const fs::path working_dir = "/Users/ps/Documents/GZDoom";
+
+    __log << "GZDML Starting initLaunchscfg()";
 
     //TODO: Create/Read settings file? -> constructor?
 
-    lcfg_.mod_folder = cp / mod_folder;
-    lcfg_.iwad_folder = cp / iwad_folder;
-    lcfg_.gzdoom_folder = cp / gzdoom_folder;
+    lcfg_.mod_folder = working_dir / mod_folder;
+    lcfg_.iwad_folder = working_dir / iwad_folder;
+    lcfg_.gzdoom_folder = "/Applications/";
+
+    __log << "Init paths as: \n Mods = " + lcfg_.mod_folder.string()
+                 + "\n Iwad = " + lcfg_.iwad_folder.string()
+                 + "\n Gzdm = " + lcfg_.gzdoom_folder.string();
+
+    CreateDirIfDoesntExist(lcfg_.mod_folder);
+    CreateDirIfDoesntExist(lcfg_.iwad_folder);
+    CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
 
     //default gzdoom config:
-    lcfg_.gzdoom_ini_path = cp / "gzdoom_portable.ini";
+    lcfg_.gzdoom_ini_path = working_dir / "gzdoom_mac.ini";
+
+    __log << "Using ini = " + lcfg_.gzdoom_ini_path.string();
 
     lcfg_.mod_filenames = GetSortedFilenames(lcfg_.mod_folder);
     lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);
+
+    __log << "Got sorted filenames successfully";
 }
 
 void GzdoomLauncher::InitFromFile(const fs::path dgc_file) {
@@ -89,6 +113,11 @@ QStringList GzdoomLauncher::GetModSetLabels()  {
     for(const auto& modset : games_) {
         labels.append(QString::fromStdString(modset.label));
     }
+
+    if(labels.empty()) {
+        labels.append(QString::fromStdString("*EMPTY*"));
+    }
+
     return labels;
 }
 
@@ -97,6 +126,11 @@ QStringList GzdoomLauncher::MakeModListLabels() {
     for(const std::string& fname : lcfg_.mod_filenames) {
         labels.append(QString::fromStdString(fname));
     }
+
+    if(labels.empty()) {
+        labels.append(QString::fromStdString("*EMPTY*: Please Add Mods to folder:\n" + lcfg_.mod_folder.string()));
+    }
+
     return labels;
 }
 
@@ -105,12 +139,17 @@ QStringList GzdoomLauncher::MakeIwadLabels() {
     for(const std::string& fname : lcfg_.iwad_filenames) {
         labels.append(QString::fromStdString(fname));
     }
+
+    if(labels.empty()) {
+        labels.append(QString::fromStdString("*EMPTY*: Please Add IWADS to folder:\n " + lcfg_.iwad_folder.string()));
+    }
+
     return labels;
 }
 
 //---- Iwad ----
 std::string GzdoomLauncher::GetIwad() {
-    if(lcfg_.iwad_filenames.empty()) {
+    if(lcfg_.iwad_filenames.empty() || lcfg_.iwad_filenames.size() <= lcfg_.chosen_iwad) {
         return "!!! IWAD NOT FOUND !!!";
     }
 
@@ -135,7 +174,6 @@ void GzdoomLauncher::SetIwadDir(std::string dir) {
 void GzdoomLauncher::SetMod(size_t mod_folder_index, bool enable) {
     //Check if the mod is currently enabled
     auto it = std::ranges::find(lcfg_.chosen_mods, mod_folder_index);
-
     //Disable or enable the mod
     if(enable && it == lcfg_.chosen_mods.end()) {
         lcfg_.chosen_mods.push_back(mod_folder_index);
@@ -190,6 +228,9 @@ void GzdoomLauncher::SetModSet(size_t index) {
         lcfg_.iwad_folder = modset.iwad_dir;
         lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);
     }
+    if(modset.iwad.empty()) {
+        cerr << "passing empty str modset.iwad in SetMOdSet()!\n";
+    }
     lcfg_.chosen_iwad = GetIndexInVec(modset.iwad, lcfg_.iwad_filenames);
 
     //Mods
@@ -199,6 +240,9 @@ void GzdoomLauncher::SetModSet(size_t index) {
     }
 
     for(const auto& mod : modset.selected_mods) {
+        if(mod.empty()) {
+            cerr << "passing empty str _mod_ in SetMOdSet()!\n";
+        }
         lcfg_.chosen_mods.push_back(GetIndexInVec(mod, lcfg_.mod_filenames));
     }
 
@@ -217,7 +261,7 @@ std::string GzdoomLauncher::GetDisplayCmd() {
         cmd.append("CONFIG: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
     //IWAD:
-    cmd.append(  "\nIWAD:  " + lcfg_.iwad_filenames[lcfg_.chosen_iwad]);
+    cmd.append(  "\nIWAD:  " + GetIwad());
     //MODS:
     if (!lcfg_.chosen_mods.empty()) {
         cmd.append(  "\nMODS:  ");
@@ -234,7 +278,7 @@ std::string GzdoomLauncher::GetCurrentConfigStr() {
     if(!lcfg_.gzdoom_ini_path.empty()) {
         cmd.append(" -config " + lcfg_.gzdoom_ini_path.string());
     }
-    cmd.append(" -iwad " + lcfg_.iwad_filenames[lcfg_.chosen_iwad]);
+    cmd.append(" -iwad " + GetIwad());
 
     if (!lcfg_.chosen_mods.empty()) {
         cmd.append(" -file");
@@ -267,7 +311,12 @@ void GzdoomLauncher::CreateDirIfDoesntExist(const fs::path& dir) const  {
 }
 
 size_t GzdoomLauncher::GetIndexInVec(std::string file, const std::vector<std::string>& file_names) {
+    //TODO: Handle this error
+
     auto it = std::find(file_names.begin(), file_names.end(), file);
+    if(file.empty()) {
+        cerr << "***passing empty file\n";
+    }
     if(it == file_names.end()) {
         //TODO throw
         cerr << "**Index search error !! for file: " << file << '\n';
@@ -281,9 +330,6 @@ size_t GzdoomLauncher::GetIndexInVec(std::string file, const std::vector<std::st
 
 
 //=================== MacOS Implementation ===================//
-MacGzdml::MacGzdml()
-    : GzdoomLauncher() {
-}
 
 //makes a launch command string from a DooM game config struct
 std::string MacGzdml::MakeLaunchCommand() {
@@ -307,10 +353,6 @@ void MacGzdml::PerformLaunch() {
 
 
 //=================== Windows Implementation ===================//
-WinGzdml::WinGzdml()
-    : GzdoomLauncher() {
-}
-
 void WinGzdml::PerformLaunch() {
 //First method:
 

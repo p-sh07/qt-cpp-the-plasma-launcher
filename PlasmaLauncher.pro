@@ -11,12 +11,14 @@ CONFIG += c++20
 SOURCES += \
     dgc-rw.cpp \
     gzdml.cpp \
+    logger.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     dgc-rw.h \
     gzdml.h \
+    logger.h \
     mainwindow.h
 
 FORMS += \
@@ -28,6 +30,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    bkgnd.qrc
+    bkgnd.qrc \
+    icn.qrc
 
+#comment
+ICON = applet.icns
+#
 DISTFILES +=

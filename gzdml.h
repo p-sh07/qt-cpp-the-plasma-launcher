@@ -25,6 +25,7 @@
 #include <QStringList>
 
 #include "dgc-rw.h"
+#include "logger.h"
 
 using std::cout;
 using std::cerr;
@@ -62,7 +63,7 @@ struct LaunchSettings {
 class GzdoomLauncher
 {
 public:
-    GzdoomLauncher();
+    GzdoomLauncher(const log::FileLogger& logger);
     virtual ~GzdoomLauncher() = default;
 
 //------------------ Public Methods ------------------//
@@ -104,9 +105,9 @@ public:
     inline const dgc::LaunchSettings& GetLaunchConfig() { return lcfg_; }
 
 protected:
+    const log::FileLogger& __log;
 //---- Get config ref for modifying - only for child classes ------
     dgc::LaunchSettings& ModLcfg() { return lcfg_; }
-
 private:
 //------------------ Private Vars ------------------//
     dgc::LaunchSettings lcfg_;
@@ -130,7 +131,7 @@ private:
 //================ MacOS implementation ================//
 class MacGzdml final : public GzdoomLauncher {
 public:
-    MacGzdml();
+    using GzdoomLauncher::GzdoomLauncher;
     ~MacGzdml() override = default;
 
 private:
@@ -145,7 +146,7 @@ private:
 //================ Windows Implementation ================//
 class WinGzdml final : public GzdoomLauncher {
 public:
-    WinGzdml();
+    using GzdoomLauncher::GzdoomLauncher;
     ~WinGzdml() override = default;
 
 private:

@@ -40,10 +40,12 @@ private slots:
 
     void on_reset_btn_clicked();
 
-    void on_updmodlist_btn_clicked();
+    //void on_updmodlist_btn_clicked();
 
 private:
 //---- Params ----
+    log::FileLogger __log{log::LOG_FILE_PATH};
+
     Ui::MainWindow *ui;
     MacGzdml mod_manager_;
 
