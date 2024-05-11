@@ -64,31 +64,38 @@ void GzdoomLauncher::LaunchGame() {
     }
 }
 
-void GzdoomLauncher::InitLaunchConfig (const fs::path& mod_folder, const fs::path& gzdoom_folder, const fs::path& iwad_folder) {
+void GzdoomLauncher::InitLaunchConfig (const dgc::LaunchSettings& stngs) {
 
     //TODO: Adding iwad dir to gzdoom_config.ini!
     //TODO: REading settings from file!
 
-    const fs::path working_dir = dgc::DFLT_WORKING_PATH;
+    const fs::path w_dir = stngs.working_folder;
 
     __log << "GZDML Starting initLaunchscfg()";
 
     //TODO: Create/Read settings file? -> constructor?
 
-    lcfg_.mod_folder = working_dir / mod_folder;
-    lcfg_.iwad_folder = working_dir / iwad_folder;
-    lcfg_.gzdoom_folder = working_dir /"gzdoom";
+    lcfg_.mod_folder = w_dir / stngs.mod_folder;
+    lcfg_.iwad_folder = w_dir / stngs.iwad_folder;
+    lcfg_.gzdoom_folder = w_dir /"gzdoom";
 
     __log << "Init paths as: \n Mods = " + lcfg_.mod_folder.string()
                  + "\n Iwad = " + lcfg_.iwad_folder.string()
                  + "\n Gzdm = " + lcfg_.gzdoom_folder.string();
 
-    CreateDirIfDoesntExist(lcfg_.mod_folder);
-    CreateDirIfDoesntExist(lcfg_.iwad_folder);
-    CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
+    try{
+
+        CreateDirIfDoesntExist(lcfg_.mod_folder);
+        CreateDirIfDoesntExist(lcfg_.iwad_folder);
+        CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
+    }
+    catch (std::exception& ex) {
+        __log << "GZDML ERROR during init: " + std::string(ex.what());
+    }
 
     //default gzdoom config:
-    lcfg_.gzdoom_ini_path = working_dir / "gzdoom_mac.ini";
+
+    lcfg_.gzdoom_ini_path = w_dir / "gzdoom_mac.ini";
 
     __log << "Using ini = " + lcfg_.gzdoom_ini_path.string();
 
@@ -264,7 +271,7 @@ std::string GzdoomLauncher::GetDisplayCmd() {
         cmd.append("GZD.INI: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
     //IWAD:
-    wcmd.append(  "\nIWAD: " + GetIwad());
+    cmd.append(  "\nIWAD: " + GetIwad());
     //MODS:
     if (!lcfg_.chosen_mods.empty()) {
         cmd.append(  "\nMODS: ");

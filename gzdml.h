@@ -7,17 +7,11 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-
-#include <unordered_set>
-#include <unordered_map>
 
 #include <vector>
 
@@ -45,7 +39,7 @@ public:
 
 //------------------ Public Methods ------------------//
     void LaunchGame();
-    void InitLaunchConfig(const fs::path& mod_folder = dgc::DFLT_MODWADS_PATH, const fs::path& gzdoom_folder = dgc::DFLT_GZDOOM, const fs::path& iwad_folder = dgc::DFLT_IWADS_PATH);
+    void InitLaunchConfig(dgc::LaunchSettings stngs);
     void InitFromFile(const fs::path dgc_file);
     bool IsFirstLaunch();
 

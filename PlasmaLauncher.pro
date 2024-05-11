@@ -11,7 +11,6 @@ CONFIG += c++20
 SOURCES += \
     dgc-rw.cpp \
     gzdml.cpp \
-    json.cpp \
     logger.cpp \
     main.cpp \
     mainwindow.cpp
