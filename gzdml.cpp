@@ -35,8 +35,8 @@ bool pathFnameIsLess(const fs::path& lhs, const fs::path& rhs)
 //================ GzdoomLauncher - Interface ================//
 GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger)
     : __log(logger)
-    , parser_(dgc::DgcParser())
-    , games_(parser_.ParsePresetsFromFile()) {
+    , parser_(dgc::DFLT_DCG_PATH)
+    , lcfg_(parser_.ParseLaunchSettings()) {
 
 
     __log << "\n\n***** New Launch *****\n";
@@ -64,20 +64,23 @@ void GzdoomLauncher::LaunchGame() {
     }
 }
 
-void GzdoomLauncher::InitLaunchConfig (const dgc::LaunchSettings& stngs) {
+void GzdoomLauncher::InitLaunchConfig () {
 
     //TODO: Adding iwad dir to gzdoom_config.ini!
     //TODO: REading settings from file!
 
-    const fs::path w_dir = stngs.working_folder;
+    // const fs::path w_dir = stngs.working_folder;
 
-    __log << "GZDML Starting initLaunchscfg()";
+    // __log << "GZDML Starting initLaunchscfg()";
 
-    //TODO: Create/Read settings file? -> constructor?
+    // //TODO: Create/Read settings file? -> constructor?
 
-    lcfg_.mod_folder = w_dir / stngs.mod_folder;
-    lcfg_.iwad_folder = w_dir / stngs.iwad_folder;
-    lcfg_.gzdoom_folder = w_dir /"gzdoom";
+    // lcfg_.mod_folder = w_dir / stngs.mod_folder;
+    // lcfg_.iwad_folder = w_dir / stngs.iwad_folder;
+    // lcfg_.gzdoom_folder = w_dir /"gzdoom";
+
+    lcfg_ = parser_.ParseLaunchSettings();
+
 
     __log << "Init paths as: \n Mods = " + lcfg_.mod_folder.string()
                  + "\n Iwad = " + lcfg_.iwad_folder.string()
@@ -92,12 +95,6 @@ void GzdoomLauncher::InitLaunchConfig (const dgc::LaunchSettings& stngs) {
     catch (std::exception& ex) {
         __log << "GZDML ERROR during init: " + std::string(ex.what());
     }
-
-    //default gzdoom config:
-
-    lcfg_.gzdoom_ini_path = w_dir / "gzdoom_mac.ini";
-
-    __log << "Using ini = " + lcfg_.gzdoom_ini_path.string();
 
     lcfg_.mod_filenames = GetSortedFilenames(lcfg_.mod_folder);
     lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);

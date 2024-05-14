@@ -90,7 +90,7 @@ void MainWindow::on_apply_btn_clicked()
 void MainWindow::on_set_folders_btn_clicked()
 {
     cerr<< "->setting folders\n";
-    mod_manager_.InitLaunchConfig(ChooseFolder("Choose MODS Folder"), ChooseFolder("Choose GZDOOM Folder"), ChooseFolder("Choose IWAD Folder"));
+    //mod_manager_.InitLaunchConfig(ChooseFolder("Choose MODS Folder"), ChooseFolder("Choose GZDOOM Folder"), ChooseFolder("Choose IWAD Folder"));
 }
 
 // void MainWindow::on_updmodlist_btn_clicked()

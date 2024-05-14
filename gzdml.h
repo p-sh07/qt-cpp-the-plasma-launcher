@@ -39,7 +39,7 @@ public:
 
 //------------------ Public Methods ------------------//
     void LaunchGame();
-    void InitLaunchConfig(dgc::LaunchSettings stngs);
+    void InitLaunchConfig();
     void InitFromFile(const fs::path dgc_file);
     bool IsFirstLaunch();
 
@@ -81,8 +81,8 @@ protected:
     dgc::LaunchSettings& ModLcfg() { return lcfg_; }
 private:
 //------------------ Private Vars ------------------//
-    dgc::LaunchSettings lcfg_;
     dgc::DgcParser parser_;
+    dgc::LaunchSettings lcfg_;
     std::vector<dgc::ModSet> games_{1};
 
 //------------------ Private Methods ------------------//

@@ -1,0 +1,31 @@
+########################################
+# Doom Game Config File	---------------#
+########################################
+[Prev Settings]
+WORKING_DIR: D:\User\Documents\My Games\PlasmaLauncher
+
+IWADS: iwads
+MODS: mods
+GZDOOM: gzdoom
+
+GZDOOM_EXE: gzdoom.exe
+#GZDOOM_APP: gzdoom.app
+
+GZDOOM_INI: gzdoom/gzdoom_portable_pc.ini
+GZDOOM_SAVES: gzdoom/Save
+
+#set mod configs for testing
+[Mod Presets]
+#0   
+{Label: Default};
+
+#1
+{Label: Brutal DooM Sigil I&II
+ iWad:  DOOM.WAD
+ Mods:  BrutalDoom.pk3
+  Sigil_I.wad
+  Sigil_I_ost_bckh.wad
+  Sigil_II.wad
+  Sigil2_ost_thorr.wad
+  DoomMetalVol5.wad
+};

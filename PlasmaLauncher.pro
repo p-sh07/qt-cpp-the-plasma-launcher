@@ -40,4 +40,5 @@ WIN_BUILD
 #comment
 ICON = applet.icns
 #
-DISTFILES +=
+DISTFILES += \
+    mod_settings.dgc

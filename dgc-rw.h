@@ -8,6 +8,7 @@
 
 
 #include <filesystem>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -20,30 +21,7 @@ namespace fs = std::filesystem;
 
 namespace dgc {
 
-const fs::path DFLT_DCG_PATH = "modsettings.dgc";
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-//-------------- Launch Settings ----------------//
-struct LaunchSettings {
-    fs::path working_folder;
-
-    fs::path gzdoom_folder;
-    fs::path gzdoom_ini_path;
-    fs::path mod_config_path;
-
-    fs::path iwad_folder;
-    fs::path mod_folder;
-
-    size_t chosen_iwad = 0;
-    size_t chosen_mod_set = 0;
-    std::vector<size_t> chosen_mods;
-
-    std::vector<std::string> iwad_filenames;
-    std::vector<std::string> mod_filenames;
-
-    fs::path gzdoom_exe;
-    fs::path gzdoom_app;
-};
+const fs::path DFLT_DCG_PATH = "D:/User/Documents/My Games/PlasmaLauncher/mod_settings.dgc";
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //-------------- ModSet ----------------//
@@ -65,6 +43,32 @@ struct ModSet
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//-------------- Launch Settings ----------------//
+struct LaunchSettings {
+    fs::path mod_config_path;
+
+    fs::path working_folder;
+    fs::path gzdoom_folder;
+    fs::path gzdoom_ini_path;
+    fs::path gzdoom_saves;
+
+    fs::path iwad_folder;
+    fs::path mod_folder;
+
+    size_t chosen_iwad = 0;
+    size_t chosen_mod_set = 0;
+    std::vector<size_t> chosen_mods;
+
+    std::vector<std::string> iwad_filenames;
+    std::vector<std::string> mod_filenames;
+
+    fs::path gzdoom_exe;
+    fs::path gzdoom_app;
+
+    std::vector<dgc::ModSet> games;
+};
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 class ParsingError : public std::runtime_error {
 public:
     using runtime_error::runtime_error;
@@ -79,9 +83,6 @@ public:
     //open default file if empty path
     DgcParser(const fs::path settings_file = DFLT_DCG_PATH);
 
-    void InitPathsForMac();
-    void WinParseAndInit(const fs::path& gdc_path);
-
     void Write(const ModSet& mset);
     void Write(const LaunchSettings& lcfg);
 
@@ -89,14 +90,15 @@ public:
     LaunchSettings MakeDefaultsWin();
     LaunchSettings MakeDefaultsMac();
 
-    bool open(const fs::path& settings_file);
+    bool Open(const fs::path& settings_file);
 
-    LaunchSettings ParseLaunchSettings(const fs::path& gdc_path);
-    std::vector<ModSet> ParsePresetsFromFile(const fs::path& gdc_path);
+    LaunchSettings ParseLaunchSettings();
+    void ReadLaunchPaths(std::fstream& fs, LaunchSettings& settings);
+    std::vector<ModSet> ParseModPresets(std::fstream& in);
 
     bool AddWadDirToGzdoomIni(const fs::path& iwad_full_path);
 private:
-    std::fstream file_;
+    fs::path dgc_file_;
     const LaunchSettings _default_cfg;
 
 };
