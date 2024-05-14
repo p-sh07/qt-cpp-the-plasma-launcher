@@ -20,8 +20,8 @@ namespace fs = std::filesystem;
 //==========================================================//
 
 namespace dgc {
-
-const fs::path DFLT_DCG_PATH = "D:/User/Documents/My Games/PlasmaLauncher/mod_settings.dgc";
+//TODO: ifdef MAC or WIN ooor, specify the USER documents folder?
+const fs::path DFLT_DCG_PATH = "mod_settings.dgc";
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //-------------- ModSet ----------------//
@@ -61,11 +61,6 @@ struct LaunchSettings {
 
     std::vector<std::string> iwad_filenames;
     std::vector<std::string> mod_filenames;
-
-    fs::path gzdoom_exe;
-    fs::path gzdoom_app;
-
-    std::vector<dgc::ModSet> games;
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -75,16 +70,21 @@ public:
 };
 //==========================================================//
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+struct DgContents {
+    LaunchSettings settings;
+    std::vector<ModSet> games;
+};
+//==========================================================//
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //-------------- ModSet ----------------//
-class DgcParser {
+class Parser {
 public:
     //open default file if empty path
-    DgcParser(const fs::path settings_file = DFLT_DCG_PATH);
+    Parser(const fs::path settings_file = DFLT_DCG_PATH);
 
-    void Write(const ModSet& mset);
-    void Write(const LaunchSettings& lcfg);
+    void Write(const LaunchSettings& lcfg, const std::vector<ModSet>& presets = {});
 
     LaunchSettings MakeDefaults();
     LaunchSettings MakeDefaultsWin();
@@ -92,9 +92,9 @@ public:
 
     bool Open(const fs::path& settings_file);
 
-    LaunchSettings ParseLaunchSettings();
-    void ReadLaunchPaths(std::fstream& fs, LaunchSettings& settings);
-    std::vector<ModSet> ParseModPresets(std::fstream& in);
+    DgContents ParseFile(const fs::path& dgc_path = {});
+    LaunchSettings ReadLaunchPaths(std::fstream& fs);
+    std::vector<ModSet> ParseModPresets(std::fstream& fs);
 
     bool AddWadDirToGzdoomIni(const fs::path& iwad_full_path);
 private:
