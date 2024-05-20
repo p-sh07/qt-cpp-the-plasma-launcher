@@ -6,6 +6,8 @@
 //
 #include "dgc-rw.h"
 
+#include <iostream>
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -95,6 +97,9 @@ namespace dgc {
 
 using namespace std::literals;
 
+//==========================================================//
+//================= Labels for settings ===============//
+
 const std::string_view LAST_STNGS_LABEL = "Prev Settings"sv;
 const std::string_view MODSETS_LABEL = "Mod Presets"sv;
 
@@ -109,113 +114,51 @@ const std::string_view GZDOOM_SAVES_LABEL = "GZDOOM_SAVES"sv;
 const std::string_view MODSET_LABEL = "Label"sv;
 const std::string_view MS_IWAD_LABEL = "iWad"sv;
 const std::string_view MS_MOD_LABEL = "Mods"sv;
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
+
+
+//==========================================================//
+//-------------- ModSet ----------------//
 ModSet::ModSet(std::string label, std::string iwad, std::vector<std::string> mod_filenames)
     : label(std::move(label))
     , iwad(std::move(iwad))
     , selected_mods(mod_filenames) {
 }
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
+
+
+//==========================================================//
+//==================== Parser ===================//
+//---- Constructor ----//
 //open default file if empty path
-Parser::Parser(const fs::path settings_file)
-    : dgc_file_(settings_file)
-    , _default_cfg(MakeDefaults()) {
-    //NB: Creating file if doesn't exist!
-    if(!fs::exists(dgc_file_)) {
-        Write(_default_cfg);
-    }
+Parser::Parser()
+    : _default_cfg(GetDefaults()) {
 }
 
-bool Parser::Open(const fs::path& settings_file) {
-    dgc_file_ = settings_file;
-    
-    std::fstream fs(dgc_file_);
-    return fs.is_open();
-}
-
-LaunchSettings Parser::ReadLaunchPaths(std::fstream& fs) {
-    
-    LaunchSettings settings;
-    std::string line;
-    bool skip_line = false, section_end = false;
-    
-    while(!section_end && readSequence(fs, line, skip_line, section_end)) {
-        if(skip_line) {
-            continue;
-        }
-        string_view ln_view = trimWs(line);
-        
-        //LABELS:
-        auto [label, val] = split(ln_view);
-        if(label == WDIR_LABEL) {
-            settings.working_folder = val;
-        } else if(label == WDIR_LABEL) {
-            settings.working_folder = val;
-        } else if(label == IWADS_LABEL) {
-            settings.iwad_folder = val;
-        } else if(label == MODS_LABEL) {
-            settings.mod_folder = val;
-        } else if(label == GZDOOM_LABEL) {
-            settings.gzdoom_folder = val;
-        } else if(label == GZDOOM_INI_LABEL) {
-            settings.gzdoom_ini_path = val;
-        } else if(label == GZDOOM_SAVES_LABEL) {
-            settings.gzdoom_saves = val;
-        }
+//---- Public: ----//
+LaunchSettings Parser::GetDefaults(fs::path working_folder) {
+    if(!_default_cfg.Empty()) {
+        return _default_cfg;
     }
-    return settings;
-}
 
-std::vector<ModSet> Parser::ParseModPresets(std::fstream& fs) {
-    std::vector<ModSet> games;
-    
-    std::string line;
-    bool skip_line = false, presets_section_end = false;
-    //auto pos = fs.tellg();
-    
-    while(!presets_section_end && readSequence(fs, line, skip_line, presets_section_end)) {
-        if(skip_line) {
-            continue;
-        }
-        
-        try{
-            auto [label, value] = split(line);
-            
-            if(label == MODSET_LABEL) {
-                games.push_back(std::string(value));
-            } else if(label == MS_IWAD_LABEL) {
-                games.back().iwad = value;
-            } else if(label == MS_MOD_LABEL) {
-                //in case there was a first line after 'Mods:'
-                if(!value.empty()) {
-                    games.back().selected_mods.push_back(std::string(value));
-                }
-                
-                string mod_line;
-                bool skip_mod_line =false, mod_section_end = false;
-                
-                while(!mod_section_end && readSequence(fs, mod_line, skip_mod_line, mod_section_end, '}')) {
-                    
-                    if(skip_mod_line) {
-                        continue;
-                    }
-                    
-                    string_view no_ws_line_view = trimWs(mod_line);
-                    if(!no_ws_line_view.empty() && no_ws_line_view.back() == ';') {
-                        presets_section_end = true;
-                    }
-                    
-                    string_view trimmed_line_view = trim(mod_line);
-                    if(!trimmed_line_view.empty()) {
-                        games.back().selected_mods.push_back(std::string(trimmed_line_view));
-                    }
-                }
-            }
-        } catch (std::exception& ex) {
-            cerr << ex.what() << endl;
-        }
+    if(working_folder.empty()) {
+        working_folder = fs::current_path();
     }
-    return games;
+    LaunchSettings default_settings;
+
+    default_settings.working_folder = working_folder;
+    default_settings.doom_game_config = working_folder / "plasma_settings.dgc";
+
+    default_settings.gzdoom_folder = working_folder / "gzdoom";
+    default_settings.gzdoom_ini_path = working_folder / "gzdoom/gzdoom_portable_pc.ini";
+    default_settings.gzdoom_saves = working_folder / "Saves";
+
+    default_settings.iwad_folder = working_folder / "iwads";
+    default_settings.mod_folder = working_folder / "mods";
+
+    return default_settings;
 }
 
 DgContents Parser::ParseFile(const fs::path& dgc_path) {
@@ -223,12 +166,11 @@ DgContents Parser::ParseFile(const fs::path& dgc_path) {
     try {
         //NB: if file does not exist, write default file:
         if(!fs::exists(dgc_path)) {
-            Write(_default_cfg);
+            Write(dgc_path, _default_cfg);
             return {_default_cfg, {}};
         }
 
-        //if path not provided, use default or given during construction
-        std::fstream fs(dgc_path.empty() ? dgc_file_ : dgc_path, std::ios_base::in);
+        std::fstream fs(dgc_path, std::ios_base::in);
         std::string line;
 
         while(std::getline(fs, line)) {
@@ -257,17 +199,17 @@ DgContents Parser::ParseFile(const fs::path& dgc_path) {
     return result;
 }
 
-void Parser::Write(const LaunchSettings& lcfg, const std::vector<ModSet>& presets) {
+void Parser::Write(const fs::path to_file, const LaunchSettings& lcfg, const std::vector<ModSet>& presets) {
     try {
 
-        fs::path folder = dgc_file_.parent_path();
+        fs::path folder = to_file.parent_path();
         //create directories if they dont exist
         if(!fs::exists(folder)) {
             fs::create_directories(folder);
         }
 
         //overwrite existing file
-        std::ofstream fs(dgc_file_, std::ios_base::trunc);
+        std::ofstream fs(to_file, std::ios_base::trunc);
         if(!fs.is_open()) {
             throw std::runtime_error("Could not open dgc file for write!"s);
         }
@@ -316,38 +258,94 @@ void Parser::Write(const LaunchSettings& lcfg, const std::vector<ModSet>& preset
     }
 }
 
+bool Parser::AddWadDirToGzdoomIni(const fs::path& iwad_full_path) {
+    return false;
+}
+//---- Private ----//
+LaunchSettings Parser::ReadLaunchPaths(std::fstream& fs) {
 
-LaunchSettings Parser::MakeDefaults() {
-    //    #ifdef WIN_BUILD
-    //    return MakeDefaultsWin();
-    //    #elif defined(MAC_BUILD)
-    return MakeDefaultsMac();
-    //===    #endif
+    LaunchSettings settings;
+    std::string line;
+    bool skip_line = false, section_end = false;
+
+    while(!section_end && readSequence(fs, line, skip_line, section_end)) {
+        if(skip_line) {
+            continue;
+        }
+        string_view ln_view = trimWs(line);
+
+        //LABELS:
+        auto [label, val] = split(ln_view);
+        if(label == WDIR_LABEL) {
+            settings.working_folder = val;
+        } else if(label == WDIR_LABEL) {
+            settings.working_folder = val;
+        } else if(label == IWADS_LABEL) {
+            settings.iwad_folder = val;
+        } else if(label == MODS_LABEL) {
+            settings.mod_folder = val;
+        } else if(label == GZDOOM_LABEL) {
+            settings.gzdoom_folder = val;
+        } else if(label == GZDOOM_INI_LABEL) {
+            settings.gzdoom_ini_path = val;
+        } else if(label == GZDOOM_SAVES_LABEL) {
+            settings.gzdoom_saves = val;
+        }
+    }
+    return settings;
 }
 
-LaunchSettings Parser::MakeDefaultsWin() {
-    LaunchSettings parsed_settings;
-    
-    return parsed_settings;
+std::vector<ModSet> Parser::ParseModPresets(std::fstream& fs) {
+    std::vector<ModSet> games;
+
+    std::string line;
+    bool skip_line = false, presets_section_end = false;
+    //auto pos = fs.tellg();
+
+    while(!presets_section_end && readSequence(fs, line, skip_line, presets_section_end)) {
+        if(skip_line) {
+            continue;
+        }
+
+        try{
+            auto [label, value] = split(line);
+
+            if(label == MODSET_LABEL) {
+                games.push_back(std::string(value));
+            } else if(label == MS_IWAD_LABEL) {
+                games.back().iwad = value;
+            } else if(label == MS_MOD_LABEL) {
+                //in case there was a first line after 'Mods:'
+                if(!value.empty()) {
+                    games.back().selected_mods.push_back(std::string(value));
+                }
+
+                string mod_line;
+                bool skip_mod_line =false, mod_section_end = false;
+
+                while(!mod_section_end && readSequence(fs, mod_line, skip_mod_line, mod_section_end, '}')) {
+
+                    if(skip_mod_line) {
+                        continue;
+                    }
+
+                    string_view no_ws_line_view = trimWs(mod_line);
+                    if(!no_ws_line_view.empty() && no_ws_line_view.back() == ';') {
+                        presets_section_end = true;
+                    }
+
+                    string_view trimmed_line_view = trim(mod_line);
+                    if(!trimmed_line_view.empty()) {
+                        games.back().selected_mods.push_back(std::string(trimmed_line_view));
+                    }
+                }
+            }
+        } catch (std::exception& ex) {
+            cerr << ex.what() << endl;
+        }
+    }
+    return games;
 }
 
-LaunchSettings Parser::MakeDefaultsMac() {
-    fs::path working_folder = "/Users/ps/Documents/My Games/ThePlasmaLauncher";
-    LaunchSettings default_settings;
-    
-    default_settings.working_folder = working_folder;
-    
-    default_settings.mod_config_path = "mod_settings.dgc"s;
-
-    default_settings.gzdoom_folder = "gzdoom";
-    default_settings.gzdoom_ini_path = "gzdoom/gzdoom_portable_mac.ini";
-    default_settings.gzdoom_saves = "Saves";
-
-    default_settings.iwad_folder = "iwads";
-    default_settings.mod_folder = "mods";
-
-    return default_settings;
-}
-
-
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 }//namespace dgc

@@ -16,7 +16,7 @@ void _log::FileLogger::LogMsg(std::string msg) const {
     // Format: Mo, 15.06.2009 20:20:00
     std::strftime(buffer, 32, "%H:%M:%S", ptm);
 
-    out << "[" << buffer << "]:  ";
+    out << "[" << buffer << "]: ";
     out << msg << "\n";
 
     out.close();

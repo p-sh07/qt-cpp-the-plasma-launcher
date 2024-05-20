@@ -1,22 +1,19 @@
 #pragma once
 
-#include <windows.h>
-//#include <Atlconv.h>
-
-
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <fstream>
-#include <iostream>
 #include <filesystem>
-#include <stdexcept>
 #include <string>
-
+#include <string_view>
 #include <vector>
 
 #include <QString>
 #include <QStringList>
+
+#ifdef WIN_BUILD
+#include <windows.h>
+#include <shlobj.h>
+//#include <stringapiset.h>
+//#include <Atlconv.h>
+#endif
 
 #include "dgc-rw.h"
 #include "logger.h"
@@ -34,17 +31,19 @@ namespace fs = std::filesystem;
 class GzdoomLauncher
 {
 public:
-    GzdoomLauncher(const _log::FileLogger& logger);
+    GzdoomLauncher(const _log::FileLogger& logger, const fs::path& dgc_file = {});
     virtual ~GzdoomLauncher() = default;
 
 //------------------ Public Methods ------------------//
     void LaunchGame();
-    void InitLaunchConfig();
-    void InitFromFile(const fs::path dgc_file);
+    void InitFromFile(const fs::path& dgc_file);
+    void SetWorkingDir(const fs::path& wdir);
+    void InitPaths();
     bool IsFirstLaunch();
+    void CreateFolders();
 
 //------------------ Get & Set Methods ------------------//
-    GzdoomLauncher(const fs::path& gzdoom_dir);
+    fs::path GetDefaultWorklingDir();
 
 // ---- Labels ----
     QStringList GetModSetLabels();
@@ -81,9 +80,10 @@ protected:
     dgc::LaunchSettings& ModLcfg() { return lcfg_; }
 private:
 //------------------ Private Vars ------------------//
-    dgc::DgcParser parser_;
+    bool is_first_launch_ = true;
+    std::vector<dgc::ModSet> games_;
+    dgc::Parser parser_;
     dgc::LaunchSettings lcfg_;
-    std::vector<dgc::ModSet> games_{1};
 
 //------------------ Private Methods ------------------//
     std::vector<std::string> GetSortedFilenames(const fs::path dir);
@@ -93,6 +93,7 @@ private:
 
 //---- Virtual Methods for OS-specific Implementation ------
     virtual void PerformLaunch() = 0;
+    //virtual fs::path GetUserDocumentsPath() = 0;
 };
 //+++++++++++++++++++ Eof gzdml_mac_qt Class +++++++++++++++++++//
 //==============================================================//
@@ -107,6 +108,7 @@ public:
 
 private:
     void PerformLaunch() override;
+    //fs::path GetUserDocumentsPath() override;
     std::string MakeLaunchCommand();
 };
 //+++++++++++++++++++ Eof gzdml_mac_qt Class +++++++++++++++++++//
@@ -117,11 +119,13 @@ private:
 //================ Windows Implementation ================//
 class WinGzdml final : public GzdoomLauncher {
 public:
-    using GzdoomLauncher::GzdoomLauncher;
+    WinGzdml(const _log::FileLogger& logger);
     ~WinGzdml() override = default;
+
 
 private:
     void PerformLaunch() override;
+    //fs::path GetUserDocumentsPath() override;
 };
 //+++++++++++++++++++ Eof gzdml_win_qt Class +++++++++++++++++++//
 //==============================================================//

@@ -40,7 +40,7 @@
       <x>10</x>
       <y>10</y>
       <width>251</width>
-      <height>311</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -54,9 +54,9 @@ background-color: rgba(10,10,10, 95);</string>
    <widget class="QComboBox" name="modset_select_combo">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>280</x>
       <y>10</y>
-      <width>181</width>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
@@ -81,7 +81,7 @@ background-color: rgba(10,10,10, 95);</string>
     <property name="geometry">
      <rect>
       <x>540</x>
-      <y>240</y>
+      <y>250</y>
       <width>121</width>
       <height>71</height>
      </rect>
@@ -237,9 +237,9 @@ background-color: rgba(10,10,10, 95);</string>
    <widget class="QPushButton" name="set_folders_btn">
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>350</x>
       <y>60</y>
-      <width>131</width>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -335,15 +335,15 @@ background-color: rgba(10,10,10, 95);</string>
      </palette>
     </property>
     <property name="text">
-     <string>Set Folders...</string>
+     <string>Set Working Folder...</string>
     </property>
    </widget>
    <widget class="QPushButton" name="apply_btn">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>280</y>
-      <width>131</width>
+      <x>20</x>
+      <y>290</y>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -439,7 +439,7 @@ background-color: rgba(10,10,10, 95);</string>
      </palette>
     </property>
     <property name="text">
-     <string>Save Preset...</string>
+     <string>Apply</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -447,7 +447,7 @@ background-color: rgba(10,10,10, 95);</string>
      <rect>
       <x>510</x>
       <y>220</y>
-      <width>71</width>
+      <width>111</width>
       <height>21</height>
      </rect>
     </property>
@@ -462,6 +462,119 @@ background-color: rgba(10,10,10, 95);</string>
      <string>LAUNCH</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="save_new_btn">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>290</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Button">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>39</red>
+          <green>90</green>
+          <blue>93</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>64</red>
+          <green>103</green>
+          <blue>108</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Mid">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>103</red>
+          <green>166</green>
+          <blue>175</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Button">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>39</red>
+          <green>90</green>
+          <blue>93</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>64</red>
+          <green>103</green>
+          <blue>108</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Mid">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>103</red>
+          <green>166</green>
+          <blue>175</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Button">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>39</red>
+          <green>90</green>
+          <blue>93</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>64</red>
+          <green>103</green>
+          <blue>108</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Mid">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>103</red>
+          <green>166</green>
+          <blue>175</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
+    <property name="text">
+     <string>Save New...</string>
+    </property>
+   </widget>
+   <zorder>save_new_btn</zorder>
+   <zorder>apply_btn</zorder>
+   <zorder>mods_selection_list</zorder>
+   <zorder>modset_select_combo</zorder>
+   <zorder>iwad_select_combo</zorder>
+   <zorder>launch_game_btn</zorder>
+   <zorder>text_cmd_display</zorder>
+   <zorder>set_folders_btn</zorder>
+   <zorder>label</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -469,7 +582,7 @@ background-color: rgba(10,10,10, 95);</string>
      <x>0</x>
      <y>0</y>
      <width>685</width>
-     <height>38</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDooM">

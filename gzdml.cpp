@@ -1,7 +1,8 @@
 
 #include "gzdml.h"
 
-#include <cctype>
+#include <algorithm>
+
 //=============== Sort Strings or Paths ===============//
 namespace {
 bool icharEquals(char a, char b)
@@ -14,43 +15,61 @@ bool icharLess(char a, char b)
     return std::tolower(static_cast<unsigned char>(a)) <
            std::tolower(static_cast<unsigned char>(b));
 }
+
 bool strIsLess(std::string_view lhs, std::string_view rhs)
 {
-    for(size_t i = 0; i < std::min(lhs.size(), rhs.size()); ++i) {
+    //TODO: for some reason std::min broke
+    size_t min_size = lhs.size() < rhs.size() ? lhs.size() :rhs.size();
+    for(size_t i = 0; i < min_size; ++i) {
         if(!icharEquals(lhs[i], rhs[i])) {
              return icharLess(lhs[i], rhs[i]);
         }
     } //if all symbols equal, return shorter str first
     return lhs.size() < rhs.size();
 }
-
-bool pathFnameIsLess(const fs::path& lhs, const fs::path& rhs)
-{
-    return strIsLess(lhs.filename().string(), rhs.filename().string());
-}
-
 }
 
 //================================================================//
 //================ GzdoomLauncher - Interface ================//
-GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger)
+GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, const fs::path& dgc_file)
     : __log(logger)
-    , parser_(dgc::DFLT_DCG_PATH)
-    , lcfg_(parser_.ParseLaunchSettings()) {
+    , games_(1, {"Default"}) //make 1 "default" game setting
+    , parser_() {
 
+    using namespace std::literals;
 
-    __log << "\n\n***** New Launch *****\n";
-    __log << "GZDML: construction Started";
+    __log << " ***** New Launch *****\n"s;
+    __log << "GZDML: construction Started"s;
+
+    __log << "Using file: " + dgc_file.string();
 
     try {
-    __log << "GZDML: Starting initLaunchscfg()";
+        __log << "GZDML: Starting initLaunchscfg()"s;
 
-    //init cfg paths
-    InitLaunchConfig();
+        //TODO: sort this **** out
+        if(!dgc_file.empty() && fs::exists(dgc_file)) {
+            InitFromFile(dgc_file);
+            __log << "Successfully initialized parameters from File\n"s;
+        } else if(fs::exists(fs::current_path() / lcfg_.doom_game_config)) {
+            InitFromFile(fs::current_path() / lcfg_.doom_game_config);
+            __log << "Successfully initialized parameters from Local file\n"s;
+        } else {
+            lcfg_ = parser_.GetDefaults();
+            //Create settings file:
+            if(!fs::exists(lcfg_.working_folder)) {
+                fs::create_directories(lcfg_.working_folder);
+            }
+            CreateFolders();
+
+            parser_.Write(lcfg_.doom_game_config, lcfg_);
+            __log << "Successfully initialized parameters from Defaults & Written settings file\n"s;
+        }
+        //init cfg paths
+        InitPaths();
     } catch(std::exception& ex) {
-    __log << "*GZDML ERROR*: " + std::string(ex.what());
+        __log << "*GZDML ERROR*: "s + std::string(ex.what());
     }
-    __log << "GZDML: construction Finished\n";
+    __log << "GZDML: construction Finished\n"s;
 }
 
 //There is always a default launch config present
@@ -64,37 +83,11 @@ void GzdoomLauncher::LaunchGame() {
     }
 }
 
-void GzdoomLauncher::InitLaunchConfig () {
-
-    //TODO: Adding iwad dir to gzdoom_config.ini!
-    //TODO: REading settings from file!
-
-    // const fs::path w_dir = stngs.working_folder;
-
-    // __log << "GZDML Starting initLaunchscfg()";
-
-    // //TODO: Create/Read settings file? -> constructor?
-
-    // lcfg_.mod_folder = w_dir / stngs.mod_folder;
-    // lcfg_.iwad_folder = w_dir / stngs.iwad_folder;
-    // lcfg_.gzdoom_folder = w_dir /"gzdoom";
-
-    lcfg_ = parser_.ParseLaunchSettings();
-
-
+//TODO:
+void GzdoomLauncher::InitPaths () {
     __log << "Init paths as: \n Mods = " + lcfg_.mod_folder.string()
                  + "\n Iwad = " + lcfg_.iwad_folder.string()
                  + "\n Gzdm = " + lcfg_.gzdoom_folder.string();
-
-    try{
-
-        CreateDirIfDoesntExist(lcfg_.mod_folder);
-        CreateDirIfDoesntExist(lcfg_.iwad_folder);
-        CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
-    }
-    catch (std::exception& ex) {
-        __log << "GZDML ERROR during init: " + std::string(ex.what());
-    }
 
     lcfg_.mod_filenames = GetSortedFilenames(lcfg_.mod_folder);
     lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);
@@ -102,16 +95,52 @@ void GzdoomLauncher::InitLaunchConfig () {
     __log << "Got sorted filenames successfully";
 }
 
-void GzdoomLauncher::InitFromFile(const fs::path dgc_file) {
+void GzdoomLauncher::InitFromFile(const fs::path& dgc_file) {
+    auto file_data = parser_.ParseFile(dgc_file);
 
+    lcfg_ = std::move(file_data.settings);
+    if(!file_data.games.empty()) {
+        games_ = std::move(file_data.games);
+    }
+
+    InitPaths();
 }
 
 bool GzdoomLauncher::IsFirstLaunch() {
     //if the settings file exists, then it's not the first launch
-    return !fs::exists(dgc::DFLT_DCG_PATH);
+    return is_first_launch_;
+}
+
+void GzdoomLauncher::CreateFolders() {
+    try{
+        CreateDirIfDoesntExist(lcfg_.mod_folder);
+        CreateDirIfDoesntExist(lcfg_.iwad_folder);
+        CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
+    }
+    catch (std::exception& ex) {
+        __log << "GZDML ERROR during init: " + std::string(ex.what());
+    }
+}
+
+void GzdoomLauncher::SetWorkingDir(const fs::path& wdir) {
+    lcfg_.working_folder = wdir;
+    fs::path new_file = wdir / lcfg_.doom_game_config;
+    parser_.Write(wdir / lcfg_.doom_game_config, lcfg_);
+
+    CreateFolders();
+    InitPaths();
 }
 
 //------------------ Get & Set Methods ------------------//
+
+
+fs::path GzdoomLauncher::GetDefaultWorklingDir() {
+    //TODO: Using User Documents or local dir?
+    //return GetUserDocumentsPath();
+
+    return fs::current_path();
+}
+
 // ---- Labels ----
 QStringList GzdoomLauncher::GetModSetLabels()  {
     QStringList labels;
@@ -134,7 +163,7 @@ QStringList GzdoomLauncher::MakeModListLabels() {
     }
 
     if(labels.empty()) {
-        labels.append(QString::fromStdString("*EMPTY*: Please Add Mods to folder:\n" + lcfg_.mod_folder.string()));
+        labels.append(QString::fromStdString("*EMPTY*: " + lcfg_.mod_folder.string()));
     }
 
     return labels;
@@ -222,7 +251,7 @@ void GzdoomLauncher::AddNewModSet() {
 void GzdoomLauncher::SetModSet(size_t index) {
     if(index >= games_.size()) {
         //TODO: throw
-        cerr << "Index is bigger than ModSet size()\n";
+        cerr << "Index [" << index << "] is bigger than ModSet size()\n";
         return;
     }
     //ModSet
@@ -265,12 +294,12 @@ std::string GzdoomLauncher::GetDisplayCmd() {
     std::string cmd;
     //Add config, if specified:
     if(!lcfg_.gzdoom_ini_path.empty()) {
-        cmd.append("GZD.INI: ").append(lcfg_.gzdoom_ini_path.filename().string());
+        cmd.append("INI: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
     //IWAD:
     cmd.append(  "\nIWAD: " + GetIwad());
     //MODS:
-    if (!lcfg_.chosen_mods.empty()) {
+    if (!lcfg_.chosen_mods.empty() && !lcfg_.mod_filenames.empty()) {
         cmd.append(  "\nMODS: ");
         for(const size_t mod_num : lcfg_.chosen_mods) {
             cmd.append(" [" + lcfg_.mod_filenames[mod_num] + "]");
@@ -299,7 +328,7 @@ std::string GzdoomLauncher::GetCurrentConfigStr() {
 
 
 //------------------ Private Helper Methods ------------------//
-std::vector<std::string> GzdoomLauncher::GetSortedFilenames(const fs::path dir) {
+std::vector<std::string> GzdoomLauncher::GetSortedFilenames(fs::path dir) {
     std::vector<std::string> filenames;
 
     for(const auto& filepath : fs::directory_iterator{dir}) {
@@ -337,17 +366,6 @@ size_t GzdoomLauncher::GetIndexInVec(std::string file, const std::vector<std::st
 
 
 //=================== MacOS Implementation ===================//
-
-//makes a launch command string from a DooM game config struct
-std::string MacGzdml::MakeLaunchCommand() {
-    auto& lcfg = GetLaunchConfig();
-    std::string cmd = "open -g -a "
-    + (lcfg.gzdoom_folder / lcfg.gzdoom_app).string()
-    + " --args " + GetCurrentConfigStr();
-
-    return cmd;
-}
-
 void MacGzdml::PerformLaunch() {
     std::string lcmd = MakeLaunchCommand();
     cerr << "\n ->Performing launch with cmd [" << lcmd << "]\n";
@@ -355,21 +373,55 @@ void MacGzdml::PerformLaunch() {
     std::system(lcmd.data());
 }
 
+// fs::path MacGzdml::GetUserDocumentsPath() {
+//     return fs::current_path();
+// }
+
+//makes a launch command string from a DooM game config struct
+std::string MacGzdml::MakeLaunchCommand() {
+    auto& lcfg = GetLaunchConfig();
+    std::string cmd = "open -g -a "
+                      + (lcfg.gzdoom_folder / "gzdoom_app").string()
+                      + " --args " + GetCurrentConfigStr();
+
+    return cmd;
+}
+
 //+++++++++++++++++++ Eof gzdml_mac_qt Class +++++++++++++++++++//
 //==============================================================//
 
 
 //=================== Windows Implementation ===================//
+
+WinGzdml::WinGzdml(const _log::FileLogger& logger)
+    : GzdoomLauncher(logger) {
+}
+
+// fs::path WinGzdml::GetUserDocumentsPath() {
+//     // Deprecated?
+//     // std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+//     // fs::path working_dir = converter.to_bytes(std::wstring(user_documents));
+
+//     std::string docs_path;
+//     PWSTR wstr_path;
+//     if (SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &wstr_path) == S_OK)
+//     {
+//         int wlen = lstrlenW(wstr_path);
+//         int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr_path, wlen, NULL, 0, NULL, NULL);
+//         WideCharToMultiByte(CP_UTF8, 0, wstr_path, wlen, &docs_path[0], size_needed, NULL, NULL);
+//         //NB: free memory
+//         CoTaskMemFree(wstr_path);
+//     }
+
+//     return docs_path;
+// }
+
 void WinGzdml::PerformLaunch() {
 //First method:
 
     std::string lcmd = GetCurrentConfigStr();
 
-cerr << "\n ->Performing launch with Dir:" << (GetLaunchConfig().gzdoom_folder / GetLaunchConfig().gzdoom_exe).string()
-            << " & Cmd [" << lcmd << "]\n";
-
-
-     ShellExecuteW(NULL, NULL, GetLaunchConfig().gzdoom_exe.c_str(), std::wstring(lcmd.begin(), lcmd.end()).c_str(), GetLaunchConfig().gzdoom_folder.c_str(), SW_SHOWDEFAULT);
+ShellExecuteW(NULL, NULL, LPCWSTR("gzdoom.exe"), std::wstring(lcmd.begin(), lcmd.end()).c_str(), GetLaunchConfig().gzdoom_folder.c_str(), SW_SHOWDEFAULT);
 
 //2nd method:
     // STARTUPINFO si;

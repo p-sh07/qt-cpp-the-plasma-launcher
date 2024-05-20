@@ -34,6 +34,7 @@ private slots:
     void on_launch_game_btn_clicked();
     void on_apply_btn_clicked();
     void on_set_folders_btn_clicked();
+    void on_save_new_btn_clicked();
 
 private:
 //---- Params ----

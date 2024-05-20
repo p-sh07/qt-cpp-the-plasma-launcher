@@ -12,8 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
     ,  mod_manager_(__log)
 {
     __log << "MainWindow constructor Started";
-    __log << "App working dir: "+fs::current_path().string();
-    __log << "App current path: "+QDir::currentPath().toStdString();
+    __log << "App working Path: "+fs::current_path().string();
+    __log << "App current QDir: "+QDir::currentPath().toStdString();
 
     //TODO: Ask for folders during first launch!
 
@@ -30,6 +30,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     __log << "MainWindow construction Finished\n";
+
+    //TODO: Setup window if first launch
+    // if(mod_manager_.IsFirstLaunch()) {
+    //     mod_manager_.SetWorkingDir(ChooseFolder("CHOOSE FOLDER FOR MOD MANAGER FILES e.g. \"Documents/My Games...\" "));
+    // }
 }
 
 MainWindow::~MainWindow()
@@ -71,7 +76,7 @@ void MainWindow::on_modset_select_combo_currentIndexChanged(int index)
     UpdCmdDisplay();
 }
 
-//---- Buttonst ----
+//---- Buttons ----
 
 void MainWindow::on_launch_game_btn_clicked()
 {
@@ -89,15 +94,14 @@ void MainWindow::on_apply_btn_clicked()
 
 void MainWindow::on_set_folders_btn_clicked()
 {
-    cerr<< "->setting folders\n";
-    //mod_manager_.InitLaunchConfig(ChooseFolder("Choose MODS Folder"), ChooseFolder("Choose GZDOOM Folder"), ChooseFolder("Choose IWAD Folder"));
+    mod_manager_.SetWorkingDir(ChooseFolder("Choose Working Folder (for mods, wads, etc.)"));
 }
 
-// void MainWindow::on_updmodlist_btn_clicked()
-// {
-//     cerr<< "->refreshing modset list..\n";
-//     mod_manager_.InitLaunchConfig();
-// }
+void MainWindow::on_save_new_btn_clicked()
+{
+    //TODO
+    mod_manager_.AddNewModSet();
+}
 
 //============== Private Helper Methods ==============//
 void MainWindow::InitModList() {
@@ -116,7 +120,7 @@ void MainWindow::InitModList() {
 
 void MainWindow::UpdModList() {
     //TODO: if mods dir changed, Init with new dir:
-    //InitModList();
+    InitModList();
     //Uncheck all
     for(int i = 0; i < ui->mods_selection_list->count(); ++i) {
         ui->mods_selection_list->item(i)->setCheckState(Qt::Unchecked);

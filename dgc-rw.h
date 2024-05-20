@@ -6,9 +6,7 @@
 //
 #pragma once
 
-
 #include <filesystem>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -20,10 +18,7 @@ namespace fs = std::filesystem;
 //==========================================================//
 
 namespace dgc {
-//TODO: ifdef MAC or WIN ooor, specify the USER documents folder?
-const fs::path DFLT_DCG_PATH = "mod_settings.dgc";
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//==========================================================//
 //-------------- ModSet ----------------//
 struct ModSet
 {
@@ -41,13 +36,19 @@ struct ModSet
     fs::path iwad_dir;
     fs::path mod_dir;
 };
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+
+//==========================================================//
 //-------------- Launch Settings ----------------//
 struct LaunchSettings {
-    fs::path mod_config_path;
+    inline bool Empty() const {
+        return working_folder.empty();
+    }
 
     fs::path working_folder;
+    fs::path doom_game_config = "plasma_settings.dgc";
+
     fs::path gzdoom_folder;
     fs::path gzdoom_ini_path;
     fs::path gzdoom_saves;
@@ -62,44 +63,48 @@ struct LaunchSettings {
     std::vector<std::string> iwad_filenames;
     std::vector<std::string> mod_filenames;
 };
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+
+//==========================================================//
+//-------------- ParsingError ----------------//
 class ParsingError : public std::runtime_error {
 public:
     using runtime_error::runtime_error;
 };
-//==========================================================//
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+
+//==========================================================//
+//-------------- DgContents ----------------//
 struct DgContents {
     LaunchSettings settings;
     std::vector<ModSet> games;
 };
-//==========================================================//
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-//-------------- ModSet ----------------//
+
+
+
+//==========================================================//
+//-------------- Parser ----------------//
 class Parser {
 public:
     //open default file if empty path
-    Parser(const fs::path settings_file = DFLT_DCG_PATH);
+    Parser();
 
-    void Write(const LaunchSettings& lcfg, const std::vector<ModSet>& presets = {});
-
-    LaunchSettings MakeDefaults();
-    LaunchSettings MakeDefaultsWin();
-    LaunchSettings MakeDefaultsMac();
-
-    bool Open(const fs::path& settings_file);
-
-    DgContents ParseFile(const fs::path& dgc_path = {});
-    LaunchSettings ReadLaunchPaths(std::fstream& fs);
-    std::vector<ModSet> ParseModPresets(std::fstream& fs);
+    LaunchSettings GetDefaults(fs::path working_folder = {});
+    DgContents ParseFile(const fs::path& dgc_path);
+    void Write(const fs::path to_file, const LaunchSettings& lcfg, const std::vector<ModSet>& presets = {});
 
     bool AddWadDirToGzdoomIni(const fs::path& iwad_full_path);
+
 private:
-    fs::path dgc_file_;
+//---- Var ----//
     const LaunchSettings _default_cfg;
+
+//---- Methods ----//
+    LaunchSettings ReadLaunchPaths(std::fstream& fs);
+    std::vector<ModSet> ParseModPresets(std::fstream& fs);
 
 };
 
