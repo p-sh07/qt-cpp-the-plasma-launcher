@@ -12,6 +12,7 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <string>
 
 //creates unique id for the logger variable:
@@ -25,7 +26,7 @@
 
 namespace _log {
 
-const std::filesystem::path LOG_FILE_NAME = "gzdml_log.txt";
+const std::filesystem::path LOG_FILE_NAME = "_log.txt";
 
 class Duration {
 public:
@@ -56,10 +57,10 @@ private:
 
 class FileLogger {
 public:
-    FileLogger(const std::filesystem::path& file);
+    FileLogger(std::ofstream& out);
     void LogMsg(std::string msg) const;
 private:
-    const std::filesystem::path log_file_;
+    std::ofstream& out_;
 };
 
 const FileLogger& operator<<(const FileLogger& fl, const std::string msg);

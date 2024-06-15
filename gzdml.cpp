@@ -31,10 +31,10 @@ bool strIsLess(std::string_view lhs, std::string_view rhs)
 
 //================================================================//
 //================ GzdoomLauncher - Interface ================//
-GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, const fs::path& dgc_file)
+GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, fs::path dgc_file)
     : __log(logger)
     , games_(1, {"Default"}) //make 1 "default" game setting
-    , parser_() {
+    , parser_(dgc_file.empty() ? fs::current_path() : dgc_file) {
 
     using namespace std::literals;
 
@@ -50,10 +50,8 @@ GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, const fs::path& d
         if(!dgc_file.empty() && fs::exists(dgc_file)) {
             InitFromFile(dgc_file);
             __log << "Successfully initialized parameters from File\n"s;
-        } else if(fs::exists(fs::current_path() / lcfg_.doom_game_config)) {
-            InitFromFile(fs::current_path() / lcfg_.doom_game_config);
-            __log << "Successfully initialized parameters from Local file\n"s;
-        } else {
+        }
+        else {
             lcfg_ = parser_.GetDefaults();
             //Create settings file:
             if(!fs::exists(lcfg_.working_folder)) {
@@ -95,7 +93,7 @@ void GzdoomLauncher::InitPaths () {
     __log << "Got sorted filenames successfully";
 }
 
-void GzdoomLauncher::InitFromFile(const fs::path& dgc_file) {
+void GzdoomLauncher::InitFromFile(fs::path dgc_file) {
     auto file_data = parser_.ParseFile(dgc_file);
 
     lcfg_ = std::move(file_data.settings);
@@ -122,10 +120,10 @@ void GzdoomLauncher::CreateFolders() {
     }
 }
 
-void GzdoomLauncher::SetWorkingDir(const fs::path& wdir) {
+void GzdoomLauncher::SetWorkingDir(fs::path wdir) {
     lcfg_.working_folder = wdir;
-    fs::path new_file = wdir / lcfg_.doom_game_config;
-    parser_.Write(wdir / lcfg_.doom_game_config, lcfg_);
+
+    //TODO: upd paths in cfg and file
 
     CreateFolders();
     InitPaths();
@@ -326,7 +324,6 @@ std::string GzdoomLauncher::GetCurrentConfigStr() {
     return cmd;
 }
 
-
 //------------------ Private Helper Methods ------------------//
 std::vector<std::string> GzdoomLauncher::GetSortedFilenames(fs::path dir) {
     std::vector<std::string> filenames;
@@ -340,7 +337,7 @@ std::vector<std::string> GzdoomLauncher::GetSortedFilenames(fs::path dir) {
     return filenames;
 }
 
-void GzdoomLauncher::CreateDirIfDoesntExist(const fs::path& dir) const  {
+void GzdoomLauncher::CreateDirIfDoesntExist(fs::path dir) const  {
     if(!fs::exists(dir)) {
         fs::create_directory(dir);
     }
@@ -393,8 +390,8 @@ std::string MacGzdml::MakeLaunchCommand() {
 
 //=================== Windows Implementation ===================//
 
-WinGzdml::WinGzdml(const _log::FileLogger& logger)
-    : GzdoomLauncher(logger) {
+WinGzdml::WinGzdml(const _log::FileLogger& logger, fs::path dgc_file)
+    : GzdoomLauncher(logger, dgc_file) {
 }
 
 // fs::path WinGzdml::GetUserDocumentsPath() {

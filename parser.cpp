@@ -4,7 +4,7 @@
 //
 //  Created by ps on 02.05.2024.
 //
-#include "dgc-rw.h"
+#include "parser.h"
 
 #include <iostream>
 
@@ -137,15 +137,15 @@ Parser::Parser()
     : _default_cfg(GetDefaults()) {
 }
 
+Parser::Parser(fs::path working_folder)
+    : _default_cfg(GetDefaults()) {
+}
 //---- Public: ----//
 LaunchSettings Parser::GetDefaults(fs::path working_folder) {
     if(!_default_cfg.Empty()) {
         return _default_cfg;
     }
 
-    if(working_folder.empty()) {
-        working_folder = fs::current_path();
-    }
     LaunchSettings default_settings;
 
     default_settings.working_folder = working_folder;
@@ -161,7 +161,7 @@ LaunchSettings Parser::GetDefaults(fs::path working_folder) {
     return default_settings;
 }
 
-DgContents Parser::ParseFile(const fs::path& dgc_path) {
+DgContents Parser::ParseFile(fs::path dgc_path) {
     DgContents result;
     try {
         //NB: if file does not exist, write default file:
@@ -258,7 +258,7 @@ void Parser::Write(const fs::path to_file, const LaunchSettings& lcfg, const std
     }
 }
 
-bool Parser::AddWadDirToGzdoomIni(const fs::path& iwad_full_path) {
+bool Parser::AddWadDirToGzdoomIni(fs::path iwad_full_path) {
     return false;
 }
 //---- Private ----//

@@ -15,7 +15,7 @@
 //#include <Atlconv.h>
 #endif
 
-#include "dgc-rw.h"
+#include "parser.h"
 #include "logger.h"
 
 using std::cout;
@@ -31,13 +31,13 @@ namespace fs = std::filesystem;
 class GzdoomLauncher
 {
 public:
-    GzdoomLauncher(const _log::FileLogger& logger, const fs::path& dgc_file = {});
+    GzdoomLauncher(std::shared_ptr<_log::FileLogger>   logger, fs::path dgc_file = {});
     virtual ~GzdoomLauncher() = default;
 
 //------------------ Public Methods ------------------//
     void LaunchGame();
-    void InitFromFile(const fs::path& dgc_file);
-    void SetWorkingDir(const fs::path& wdir);
+    void InitFromFile(fs::path dgc_file);
+    void SetWorkingDir(fs::path wdir);
     void InitPaths();
     bool IsFirstLaunch();
     void CreateFolders();
@@ -75,7 +75,7 @@ public:
     inline const dgc::LaunchSettings& GetLaunchConfig() { return lcfg_; }
 
 protected:
-    const _log::FileLogger& __log;
+    std::shared_ptr<_log::FileLogger> __log = nullptr;
 //---- Get config ref for modifying - only for child classes ------
     dgc::LaunchSettings& ModLcfg() { return lcfg_; }
 private:
@@ -87,7 +87,7 @@ private:
 
 //------------------ Private Methods ------------------//
     std::vector<std::string> GetSortedFilenames(const fs::path dir);
-    void CreateDirIfDoesntExist(const fs::path& dir) const;
+    void CreateDirIfDoesntExist(fs::path dir) const;
     size_t GetIndexInVec(std::string file, const std::vector<std::string>& file_names);
 
 
@@ -119,7 +119,7 @@ private:
 //================ Windows Implementation ================//
 class WinGzdml final : public GzdoomLauncher {
 public:
-    WinGzdml(const _log::FileLogger& logger);
+    WinGzdml(const _log::FileLogger& logger, fs::path working_folder);
     ~WinGzdml() override = default;
 
 

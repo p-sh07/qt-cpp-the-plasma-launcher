@@ -91,12 +91,13 @@ class Parser {
 public:
     //open default file if empty path
     Parser();
+    Parser(fs::path working_folder);
 
     LaunchSettings GetDefaults(fs::path working_folder = {});
-    DgContents ParseFile(const fs::path& dgc_path);
-    void Write(const fs::path to_file, const LaunchSettings& lcfg, const std::vector<ModSet>& presets = {});
+    DgContents ParseFile(fs::path dgc_path);
+    void Write(fs::path to_file, const LaunchSettings& lcfg, const std::vector<ModSet>& presets = {});
 
-    bool AddWadDirToGzdoomIni(const fs::path& iwad_full_path);
+    bool AddWadDirToGzdoomIni(fs::path iwad_full_path);
 
 private:
 //---- Var ----//

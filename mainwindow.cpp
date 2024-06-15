@@ -9,7 +9,8 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    ,  mod_manager_(__log)
+    , working_folder_(QDir::currentPath().toStdString())
+    ,  mod_manager_(__log, fs::path(QDir::currentPath().toStdString()))
 {
     __log << "MainWindow constructor Started";
     __log << "App working Path: "+fs::current_path().string();

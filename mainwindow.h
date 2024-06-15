@@ -38,8 +38,8 @@ private slots:
 
 private:
 //---- Params ----
-    _log::FileLogger __log{_log::LOG_FILE_NAME};
-
+    fs::path working_folder_;
+    std::shared_ptr<_log::FileLogger> __log = nullptr;
     Ui::MainWindow *ui;
 
 #ifdef WIN_BUILD
