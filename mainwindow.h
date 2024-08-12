@@ -14,7 +14,6 @@ QT_END_NAMESPACE
 //================================================================//
 //================ Main Window ================//
 class MainWindow : public QMainWindow {
-
     Q_OBJECT
 
 public:
@@ -38,9 +37,10 @@ private slots:
 
 private:
 //---- Params ----
-    fs::path working_folder_;
-    std::shared_ptr<_log::FileLogger> __log = nullptr;
     Ui::MainWindow *ui;
+    fs::path working_folder_;
+    fs::path log_file_full_;
+    std::shared_ptr<_log::FileLogger> __logger = nullptr;
 
 #ifdef WIN_BUILD
     WinGzdml mod_manager_;

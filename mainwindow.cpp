@@ -10,13 +10,13 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , working_folder_(QDir::currentPath().toStdString())
-    ,  mod_manager_(__log, fs::path(QDir::currentPath().toStdString()))
+    , log_file_full_(working_folder_ / _log::LOG_FILE_NAME)
+    , __logger(std::make_shared<_log::FileLogger>(log_file_full_))
+    , mod_manager_(working_folder_ / dgc::DEFAULT_DGC_FILE)
 {
-    __log << "MainWindow constructor Started";
-    __log << "App working Path: "+fs::current_path().string();
-    __log << "App current QDir: "+QDir::currentPath().toStdString();
-
-    //TODO: Ask for folders during first launch!
+    __logger << "MainWindow constructor Started";
+    __logger << "App working Path: "+fs::current_path().string();
+    __logger << "App current QDir: "+QDir::currentPath().toStdString();
 
     try {
         ui->setupUi(this);
@@ -27,10 +27,10 @@ MainWindow::MainWindow(QWidget *parent)
         UpdCmdDisplay();
     }
     catch(std::exception& ex) {
-        __log << "ERROR: " + std::string(ex.what());
+        __logger << "ERROR: " + std::string(ex.what());
     }
 
-    __log << "MainWindow construction Finished\n";
+    __logger << "MainWindow construction Finished\n";
 
     //TODO: Setup window if first launch
     // if(mod_manager_.IsFirstLaunch()) {
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    __log << "MainWindow DESTRUCTOR called\n";
+    __logger << "MainWindow DESTRUCTOR called\n";
 
     delete ui;
 }
@@ -81,12 +81,12 @@ void MainWindow::on_modset_select_combo_currentIndexChanged(int index)
 
 void MainWindow::on_launch_game_btn_clicked()
 {
-    cerr << "-> passing launch command: " << ui->modset_select_combo->currentIndex() << '\n';
+    std::cerr << "-> passing launch command: " << ui->modset_select_combo->currentIndex() << '\n';
     mod_manager_.LaunchGame();
 }
 void MainWindow::on_apply_btn_clicked()
 {
-    cerr << "-> Applying mod selection to: " << ui->modset_select_combo->currentIndex();
+    std::cerr << "-> Applying mod selection to: " << ui->modset_select_combo->currentIndex();
     mod_manager_.ApplyChanges();
 
     UpdCmdDisplay();
@@ -107,7 +107,7 @@ void MainWindow::on_save_new_btn_clicked()
 //============== Private Helper Methods ==============//
 void MainWindow::InitModList() {
     if(!ui->mods_selection_list) {
-        cerr << "MW-error: Mod selection list inaccessible!\n";
+        std::cerr << "MW-error: Mod selection list inaccessible!\n";
         return;
     }
 
@@ -135,22 +135,23 @@ void MainWindow::UpdModList() {
 
 void MainWindow::InitModsetCombo() {
     if(!ui->modset_select_combo) {
-        cerr << "MW-error: Modset combo inaccessible!\n";
+        __logger << "MW-error: Modset combo inaccessible!\n";
         return;
     }
     ui->modset_select_combo->clear();
     ui->modset_select_combo->addItems(mod_manager_.GetModSetLabels());
-
 }
+
 void MainWindow::InitIwadCombo() {
     if(!ui->iwad_select_combo) {
-        cerr << "MW-error: Iwad combo inaccessible!\n";
+        std::cerr << "MW-error: Iwad combo inaccessible!\n";
         return;
     }
 
     ui->iwad_select_combo->clear();
     ui->iwad_select_combo->addItems(mod_manager_.MakeIwadLabels());
 }
+
 void MainWindow::UpdCmdDisplay() {
     if(ui->text_cmd_display) {
         ui->text_cmd_display->setText(QString::fromStdString(mod_manager_.GetDisplayCmd()));
@@ -162,42 +163,13 @@ fs::path MainWindow::ChooseFolder(const QString& caption) {
 }
 
 void MainWindow::ChooseIwadFolder() {
-    cerr << "choose folder called: ";
+    std::cerr << "choose folder called: ";
     std::string chosen_dir = QFileDialog::getExistingDirectory(this, "Choose IWAD").toStdString();
-    cerr << chosen_dir  << endl;
+    std::cerr << chosen_dir  << std::endl;
     mod_manager_.SetIwadDir(std::move(chosen_dir));
 }
 
 void MainWindow::UpdIwadCombo() {
     ui->iwad_select_combo->setCurrentIndex(mod_manager_.GetIwadIndex());
 }
-/*  Example, aux code:
- *
- *     //makes stuff semi-transparent:
-    //setWindowOpacity(0.5);
-    // if (ui->mods_selection_list) {
-    //     ui->mods_selection_list->setWindowOpacity(0.5);
-    // }
-
-    // QStringListIterator it(mod_manager_.MakeModLabels());
-    // while (it.hasNext())
-    // {
-    //     QListWidgetItem *listItem = new QListWidgetItem(it.next(),ui->mods_selection_list);
-    //     listItem->setCheckState(Qt::Unchecked);
-    //     ui->mods_selection_list->addItem(listItem);
-    // }
-
-    // auto iwads = mod_manager_.MakeIwadLabels();
-
-    // if(iwads.empty()) {
-    //     ui->iwad_select_combo->addItems({"IWAD NOT FOUND"});
-    //     //TODO: open wad dir select window
-    //     ChooseIwadFolder();
-    // }
-    // else {
-    //     ui->iwad_select_combo->addItems(iwads);
-    // }
- *
- *
- */
 

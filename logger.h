@@ -1,8 +1,3 @@
-//
-//  05.Производительность и оптимизация
-//  Тема 1.Профилируем и ускоряем
-//  Задача 05.Используем макрос
-//
 //  Created by Pavel Sh on 23.12.2023.
 //
 
@@ -57,14 +52,17 @@ private:
 
 class FileLogger {
 public:
-    FileLogger(std::ofstream& out);
+    //needs a local copy of the path, no point in passing by ref
+    FileLogger(std::filesystem::path log_path = LOG_FILE_NAME);
+
+    //Clear the log file located at path log_path, if it exists
+    void ClearLog();
     void LogMsg(std::string msg) const;
 private:
-    std::ofstream& out_;
+    std::filesystem::path log_path_;
 };
-
-const FileLogger& operator<<(const FileLogger& fl, const std::string msg);
 
 }//namespace log
 
+std::shared_ptr<_log::FileLogger> operator<<(const std::shared_ptr<_log::FileLogger>& fl, const std::string msg);
 

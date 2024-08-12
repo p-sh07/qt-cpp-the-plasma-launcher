@@ -18,12 +18,6 @@
 #include "parser.h"
 #include "logger.h"
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ofstream;
-using std::ifstream;
-
 namespace fs = std::filesystem;
 
 //================================================================//
@@ -31,7 +25,7 @@ namespace fs = std::filesystem;
 class GzdoomLauncher
 {
 public:
-    GzdoomLauncher(std::shared_ptr<_log::FileLogger>   logger, fs::path dgc_file = {});
+    GzdoomLauncher(fs::path dgc_file);
     virtual ~GzdoomLauncher() = default;
 
 //------------------ Public Methods ------------------//
@@ -40,7 +34,6 @@ public:
     void SetWorkingDir(fs::path wdir);
     void InitPaths();
     bool IsFirstLaunch();
-    void CreateFolders();
 
 //------------------ Get & Set Methods ------------------//
     fs::path GetDefaultWorklingDir();
@@ -75,9 +68,9 @@ public:
     inline const dgc::LaunchSettings& GetLaunchConfig() { return lcfg_; }
 
 protected:
-    std::shared_ptr<_log::FileLogger> __log = nullptr;
-//---- Get config ref for modifying - only for child classes ------
-    dgc::LaunchSettings& ModLcfg() { return lcfg_; }
+//---- Get config ref for modifying ------
+    dgc::LaunchSettings& GetCfg() { return lcfg_; }
+
 private:
 //------------------ Private Vars ------------------//
     bool is_first_launch_ = true;
@@ -86,6 +79,7 @@ private:
     dgc::LaunchSettings lcfg_;
 
 //------------------ Private Methods ------------------//
+    void CreateFolders();
     std::vector<std::string> GetSortedFilenames(const fs::path dir);
     void CreateDirIfDoesntExist(fs::path dir) const;
     size_t GetIndexInVec(std::string file, const std::vector<std::string>& file_names);
@@ -119,7 +113,7 @@ private:
 //================ Windows Implementation ================//
 class WinGzdml final : public GzdoomLauncher {
 public:
-    WinGzdml(const _log::FileLogger& logger, fs::path working_folder);
+    using GzdoomLauncher::GzdoomLauncher;
     ~WinGzdml() override = default;
 
 

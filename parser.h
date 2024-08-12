@@ -18,6 +18,8 @@ namespace fs = std::filesystem;
 //==========================================================//
 
 namespace dgc {
+
+const std::string DEFAULT_DGC_FILE = "default.dgc";
 //==========================================================//
 //-------------- ModSet ----------------//
 struct ModSet

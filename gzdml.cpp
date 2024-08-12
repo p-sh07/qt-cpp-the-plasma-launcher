@@ -31,25 +31,15 @@ bool strIsLess(std::string_view lhs, std::string_view rhs)
 
 //================================================================//
 //================ GzdoomLauncher - Interface ================//
-GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, fs::path dgc_file)
-    : __log(logger)
-    , games_(1, {"Default"}) //make 1 "default" game setting
-    , parser_(dgc_file.empty() ? fs::current_path() : dgc_file) {
+GzdoomLauncher::GzdoomLauncher(const fs::path dgc_file)
+    : games_(1, {"Default"}) //make 1 "default" game setting
+{
 
     using namespace std::literals;
 
-    __log << " ***** New Launch *****\n"s;
-    __log << "GZDML: construction Started"s;
-
-    __log << "Using file: " + dgc_file.string();
-
     try {
-        __log << "GZDML: Starting initLaunchscfg()"s;
-
-        //TODO: sort this **** out
-        if(!dgc_file.empty() && fs::exists(dgc_file)) {
+        if(fs::exists(dgc_file)) {
             InitFromFile(dgc_file);
-            __log << "Successfully initialized parameters from File\n"s;
         }
         else {
             lcfg_ = parser_.GetDefaults();
@@ -60,14 +50,12 @@ GzdoomLauncher::GzdoomLauncher(const _log::FileLogger& logger, fs::path dgc_file
             CreateFolders();
 
             parser_.Write(lcfg_.doom_game_config, lcfg_);
-            __log << "Successfully initialized parameters from Defaults & Written settings file\n"s;
         }
         //init cfg paths
         InitPaths();
     } catch(std::exception& ex) {
-        __log << "*GZDML ERROR*: "s + std::string(ex.what());
+
     }
-    __log << "GZDML: construction Finished\n"s;
 }
 
 //There is always a default launch config present
@@ -77,26 +65,21 @@ void GzdoomLauncher::LaunchGame() {
         PerformLaunch();
     }
     catch (std::exception& ex) {
-        cout << "Error during launch: " << ex.what() << endl;
+        //cout << "Error during launch: " << ex.what() << endl;
     }
 }
 
 //TODO:
 void GzdoomLauncher::InitPaths () {
-    __log << "Init paths as: \n Mods = " + lcfg_.mod_folder.string()
-                 + "\n Iwad = " + lcfg_.iwad_folder.string()
-                 + "\n Gzdm = " + lcfg_.gzdoom_folder.string();
-
     lcfg_.mod_filenames = GetSortedFilenames(lcfg_.mod_folder);
     lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);
-
-    __log << "Got sorted filenames successfully";
 }
 
 void GzdoomLauncher::InitFromFile(fs::path dgc_file) {
     auto file_data = parser_.ParseFile(dgc_file);
 
     lcfg_ = std::move(file_data.settings);
+
     if(!file_data.games.empty()) {
         games_ = std::move(file_data.games);
     }
@@ -116,14 +99,12 @@ void GzdoomLauncher::CreateFolders() {
         CreateDirIfDoesntExist(lcfg_.gzdoom_folder);
     }
     catch (std::exception& ex) {
-        __log << "GZDML ERROR during init: " + std::string(ex.what());
+
     }
 }
 
 void GzdoomLauncher::SetWorkingDir(fs::path wdir) {
     lcfg_.working_folder = wdir;
-
-    //TODO: upd paths in cfg and file
 
     CreateFolders();
     InitPaths();
@@ -133,9 +114,6 @@ void GzdoomLauncher::SetWorkingDir(fs::path wdir) {
 
 
 fs::path GzdoomLauncher::GetDefaultWorklingDir() {
-    //TODO: Using User Documents or local dir?
-    //return GetUserDocumentsPath();
-
     return fs::current_path();
 }
 
@@ -248,8 +226,6 @@ void GzdoomLauncher::AddNewModSet() {
 
 void GzdoomLauncher::SetModSet(size_t index) {
     if(index >= games_.size()) {
-        //TODO: throw
-        cerr << "Index [" << index << "] is bigger than ModSet size()\n";
         return;
     }
     //ModSet
@@ -262,9 +238,7 @@ void GzdoomLauncher::SetModSet(size_t index) {
         lcfg_.iwad_folder = modset.iwad_dir;
         lcfg_.iwad_filenames = GetSortedFilenames(lcfg_.iwad_folder);
     }
-    if(modset.iwad.empty()) {
-        cerr << "passing empty str modset.iwad in SetMOdSet()!\n";
-    }
+
     lcfg_.chosen_iwad = GetIndexInVec(modset.iwad, lcfg_.iwad_filenames);
 
     //Mods
@@ -274,13 +248,8 @@ void GzdoomLauncher::SetModSet(size_t index) {
     }
 
     for(const auto& mod : modset.selected_mods) {
-        if(mod.empty()) {
-            cerr << "passing empty str _mod_ in SetMOdSet()!\n";
-        }
         lcfg_.chosen_mods.push_back(GetIndexInVec(mod, lcfg_.mod_filenames));
     }
-
-    //TODO: Config, etc.
 }
 
 const dgc::ModSet& GzdoomLauncher::GetModSet() {
@@ -290,12 +259,15 @@ const dgc::ModSet& GzdoomLauncher::GetModSet() {
 //---- Launch Command ------
 std::string GzdoomLauncher::GetDisplayCmd() {
     std::string cmd;
+
     //Add config, if specified:
     if(!lcfg_.gzdoom_ini_path.empty()) {
         cmd.append("INI: ").append(lcfg_.gzdoom_ini_path.filename().string());
     }
+
     //IWAD:
     cmd.append(  "\nIWAD: " + GetIwad());
+
     //MODS:
     if (!lcfg_.chosen_mods.empty() && !lcfg_.mod_filenames.empty()) {
         cmd.append(  "\nMODS: ");
@@ -344,15 +316,10 @@ void GzdoomLauncher::CreateDirIfDoesntExist(fs::path dir) const  {
 }
 
 size_t GzdoomLauncher::GetIndexInVec(std::string file, const std::vector<std::string>& file_names) {
-    //TODO: Handle this error
-
     auto it = std::find(file_names.begin(), file_names.end(), file);
-    if(file.empty()) {
-        cerr << "***passing empty file\n";
-    }
+
     if(it == file_names.end()) {
-        //TODO throw
-        cerr << "**Index search error !! for file: " << file << '\n';
+        throw std::out_of_range("mod file not found");
     }
     return it - file_names.begin();
 }
@@ -365,14 +332,8 @@ size_t GzdoomLauncher::GetIndexInVec(std::string file, const std::vector<std::st
 //=================== MacOS Implementation ===================//
 void MacGzdml::PerformLaunch() {
     std::string lcmd = MakeLaunchCommand();
-    cerr << "\n ->Performing launch with cmd [" << lcmd << "]\n";
-
     std::system(lcmd.data());
 }
-
-// fs::path MacGzdml::GetUserDocumentsPath() {
-//     return fs::current_path();
-// }
 
 //makes a launch command string from a DooM game config struct
 std::string MacGzdml::MakeLaunchCommand() {
@@ -389,67 +350,12 @@ std::string MacGzdml::MakeLaunchCommand() {
 
 
 //=================== Windows Implementation ===================//
-
-WinGzdml::WinGzdml(const _log::FileLogger& logger, fs::path dgc_file)
-    : GzdoomLauncher(logger, dgc_file) {
-}
-
-// fs::path WinGzdml::GetUserDocumentsPath() {
-//     // Deprecated?
-//     // std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-//     // fs::path working_dir = converter.to_bytes(std::wstring(user_documents));
-
-//     std::string docs_path;
-//     PWSTR wstr_path;
-//     if (SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &wstr_path) == S_OK)
-//     {
-//         int wlen = lstrlenW(wstr_path);
-//         int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr_path, wlen, NULL, 0, NULL, NULL);
-//         WideCharToMultiByte(CP_UTF8, 0, wstr_path, wlen, &docs_path[0], size_needed, NULL, NULL);
-//         //NB: free memory
-//         CoTaskMemFree(wstr_path);
-//     }
-
-//     return docs_path;
-// }
-
 void WinGzdml::PerformLaunch() {
-//First method:
-
+#ifdef WIN_BUILD
     std::string lcmd = GetCurrentConfigStr();
 
 ShellExecuteW(NULL, NULL, LPCWSTR("gzdoom.exe"), std::wstring(lcmd.begin(), lcmd.end()).c_str(), GetLaunchConfig().gzdoom_folder.c_str(), SW_SHOWDEFAULT);
-
-//2nd method:
-    // STARTUPINFO si;
-    // PROCESS_INFORMATION pi;
-
-    // // set the size of the structures
-    // ZeroMemory(&si, sizeof(si));
-    // si.cb = sizeof(si);
-    // ZeroMemory(&pi, sizeof(pi));
-
-    // std::string command = "-config user_config.txt -file mods\\brutalv22test3.pk3 mods\\SIGIL_v1_21.wad mods\\SIGIL_SHREDS.wad mods\\D64TEX.PK3 mods\\DoomMetalVol5.wad";
-
-    // CreateProcess(
-    //    gzdoomexe.c_str(),   // the path
-    //    NULL,            // Command line
-    //    NULL,           // Process handle not inheritable
-    //    NULL,           // Thread handle not inheritable
-    //    FALSE,          // Set handle inheritance to FALSE
-    //    0,              // No creation flags
-    //    NULL,           // Use parent's environment block
-    //    NULL,           // Use parent's starting directory
-    //    &si,            // Pointer to STARTUPINFO structure
-    //    &pi             // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
-    // );
-    // // Close process and thread handles.
-    // CloseHandle(pi.hProcess);
-    // CloseHandle(pi.hThread);
-
-//ALT, working:
-//ShellExecute(NULL, L"runas", gzdoomexe.c_str(), NULL, L"gzdoom", SW_SHOWDEFAULT);
-//ShellExecute(NULL, NULL, gzdoomexe.c_str(), NULL, L"gzdoom", SW_SHOWDEFAULT);
+#endif
 }
 
 //+++++++++++++++++++ Eof gzdml_win_qt Class +++++++++++++++++++//

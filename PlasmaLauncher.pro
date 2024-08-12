@@ -34,8 +34,8 @@ RESOURCES += \
     icn.qrc
 
 DEFINES += \
-WIN_BUILD
-#MAC_BUILD
+#WIN_BUILD
+MAC_BUILD
 
 #comment
 ICON = applet.icns
